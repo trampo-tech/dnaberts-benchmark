@@ -22,16 +22,33 @@ TODO
   </ol>
 </details>
 
-## Adjusting .gitignore
-
-Ensure you adjust the `.gitignore` file according to your project needs. For example, since this is a template, the `/data/` folder is commented out and data will not be exlucded from source control:
-
-```plaintext
-# exclude data from source control by default
-# /data/
+## How to run
+```bash
+uv run python train_hydra.py
 ```
 
-Typically, you want to exclude this folder if it contains either sensitive data or large files that you do not want to trac. 
+This uses defaults from `conf/config.yaml`:
+- model: `dnabert2`
+- data: `promoter`
+- train: `default`
+
+##  Switch model config
+
+```bash
+uv run src/main.py model=bert_base
+```
+
+## Override values from CLI
+
+```bash
+uv run src/main.py model=dnabert2 train.train_bs=4 train.fp16=false train.epochs=5
+```
+
+## Multirun sweep
+
+```bash
+uv run src/main.py -m model=dnabert2,bert_base train.train_bs=4,8
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -46,29 +63,4 @@ Typically, you want to exclude this folder if it contains either sensitive data 
 ```markdown
 **TODO**
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Structure
-
-```markdown
-.
-├── LICENCE
-├── README.md
-├── data
-│   ├── external
-│   ├── interim
-│   ├── processed
-│   └── raw
-├── notebooks
-├── references
-├── reports
-│   └── figures
-└── src
-    ├── main.py
-    ├── config
-    ├── modeling
-    └── utils
-```
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

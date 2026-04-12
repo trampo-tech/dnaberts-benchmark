@@ -1,0 +1,8 @@
+defaults:
+  - model: dnabert2
+  - data: promoter
+  - train: default
+  - _self_
+
+experiment_name: promoter_binary
+seed: 42

@@ -1,0 +1,4 @@
+name: zhihan1996/DNABERT-2-117M
+trust_remote_code: true
+max_length: 512
+sequence_preprocess: dna
