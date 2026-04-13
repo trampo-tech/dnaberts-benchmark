@@ -1,0 +1,2 @@
+timestamp,run_id,status,experiment,model_name,model_fallback,seed,epochs,train_bs,eval_bs,learning_rate,max_length,validation_f1,validation_accuracy,validation_roc_auc,test_f1,test_accuracy,test_roc_auc,train_runtime,train_samples_per_second,git_commit
+2026-04-13T12:52:06Z,promoter_binary__zhihan1996_DNA_bert_6__20260413T123321Z,completed,promoter_binary,zhihan1996/DNA_bert_6,False,42,3,8,16,2e-05,512,0.6665915746789818,0.4999155262713296,0.4994935857621731,0.6666666666666666,0.5,0.5,1113.3052,127.607,9c754f1
