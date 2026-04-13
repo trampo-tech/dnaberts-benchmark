@@ -1,6 +1,7 @@
 # DNABerts Benchmarks
 
-TODO
+Benchmark pipeline for promoter classification with Hydra-driven model selection,
+MLflow experiment tracking, and local leaderboard export.
 <a id="readme-top"></a>
 <!-- TABLE OF CONTENTS -->
 <details open="open">
@@ -24,31 +25,50 @@ TODO
 
 ## How to run
 ```bash
-uv run python train_hydra.py
+uv run python src/main.py
 ```
 
-This uses defaults from `conf/config.yaml`:
-- model: `dnabert2`
+This uses defaults from `src/config/config.yaml`:
+- model: `dnabert`
 - data: `promoter`
 - train: `default`
 
-##  Switch model config
+## Switch model config
 
 ```bash
-uv run src/main.py model=bert_base
+uv run python src/main.py model=bertbase
 ```
+
+Available model configs:
+- dnabert
+- dnabert2
+- rnabert
+- nucleotide_transformer
+- bertbase
 
 ## Override values from CLI
 
 ```bash
-uv run src/main.py model=dnabert2 train.train_bs=4 train.fp16=false train.epochs=5
+uv run python src/main.py model=dnabert2 train.train_bs=4 train.fp16=false train.epochs=5
 ```
 
 ## Multirun sweep
 
 ```bash
-uv run src/main.py -m model=dnabert2,bert_base train.train_bs=4,8
+uv run python src/main.py -m model=dnabert2,rnabert,nucleotide_transformer,bertbase seed=42,123
 ```
+
+## Tracking outputs
+
+By default each run writes:
+- run summary JSON: runs/<experiment>/<model>/run_summary.json
+- leaderboard row append: reports/benchmark_results.csv
+- MLflow run data: mlruns/
+
+Key tracked metrics:
+- f1
+- accuracy
+- roc_auc
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
