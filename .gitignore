@@ -59,11 +59,9 @@ docs/_build/
 target/
 
 # DotEnv configuration
-<<<<<<< Updated upstream
 # .env
-=======
-#.env
->>>>>>> Stashed changes
+
+runs/
 
 # Database
 *.db
