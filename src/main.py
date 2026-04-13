@@ -44,14 +44,48 @@ def import_optional_modules(modules: list[str] | None):
         importlib.import_module(module_name)
 
 
-def preprocess_seq(seq: str, mode: str) -> str:
+def preprocess_seq(seq: str, mode: str, cfg:DictConfig) -> str:
     s = seq.upper()
     if mode == "rna_t_to_u":
         return s.replace("T", "U")
+    if mode == "kmer":
+        kmer:int = cfg.model.kmer
+        if len(s) < kmer:
+            return s
+        return " ".join(s[i : i + kmer] for i in range(len(s) - (kmer - 1)))
     if mode == "baseline_char":
         # simple baseline formatting: space-separated chars
         return " ".join(list(s))
     return s  # dna
+
+
+def estimate_unk_ratio(
+    tokenized_split,
+    unk_token_id: int | None,
+    special_token_ids: set[int],
+    sample_size: int = 256,
+) -> float | None:
+    """ Estimates the ratio of unknown tokens given to the model, the lower the better (less unknown tokens)"""
+
+    if unk_token_id is None:
+        return None
+
+    total_tokens = 0
+    unk_tokens = 0
+    n = min(len(tokenized_split), sample_size)
+
+    for i in range(n):
+        ids = tokenized_split[i]["input_ids"]
+        for token_id in ids:
+            if token_id in special_token_ids:
+                continue
+            total_tokens += 1
+            if token_id == unk_token_id:
+                unk_tokens += 1
+
+    if total_tokens == 0:
+        return None
+    return unk_tokens / total_tokens
 
 
 def positive_class_probability(logits: np.ndarray) -> np.ndarray:
@@ -107,13 +141,23 @@ def main(cfg: DictConfig):
 
     def tokenize(batch):
         seqs = [
-            preprocess_seq(x, cfg.model.sequence_preprocess) for x in batch[text_col]
+            preprocess_seq(x, cfg.model.sequence_preprocess, cfg) for x in batch[text_col]
         ]
         out = tokenizer(seqs, truncation=True, max_length=cfg.model.max_length)
         out["label"] = batch[label_col]
         return out
 
     tokenized = ds.map(tokenize, batched=True)
+
+    special_ids = set(getattr(tokenizer, "all_special_ids", []) or [])
+    train_unk_ratio = estimate_unk_ratio(
+        tokenized["train"], tokenizer.unk_token_id, special_ids
+    )
+    if train_unk_ratio is not None and train_unk_ratio > 0.3:
+        print(
+            f"[WARN] High UNK token ratio in train split: {train_unk_ratio:.3f}. "
+            "Check sequence_preprocess for this model."
+        )
 
     keep_cols = {"input_ids", "attention_mask", "label", "token_type_ids"}
     for split in tokenized.keys():
@@ -191,9 +235,59 @@ def main(cfg: DictConfig):
         compute_metrics=compute_metrics,
     )
 
+    mlflow_client = None
+    enable_mlflow = bool(getattr(cfg.train, "enable_mlflow", False))
+    if enable_mlflow:
+        try:
+            import mlflow
+        except ImportError as exc:
+            message = (
+                "MLflow could not be imported. This is often caused by incompatible dependencies. "
+                f"Original error: {exc}"
+            )
+            raise RuntimeError(message) from exc
+            print(f"[WARN] {message}")
+            mlflow_client = None
+        else:
+            mlflow_tracking_uri = getattr(
+                cfg.train,
+                "mlflow_tracking_uri",
+                f"file:{os.path.abspath(os.path.join(os.getcwd(), 'mlruns'))}",
+            )
+            mlflow_experiment = getattr(
+                cfg.train,
+                "mlflow_experiment",
+                cfg.experiment_name,
+            )
+            mlflow_client = mlflow
+            mlflow_client.set_tracking_uri(mlflow_tracking_uri)
+            mlflow_client.set_experiment(mlflow_experiment)
+            mlflow_client.start_run(run_name=run_id)
+            mlflow_client.log_params(
+                {
+                    "run_id": run_id,
+                    "experiment": cfg.experiment_name,
+                    "model_name": cfg.model.name,
+                    "sequence_preprocess": cfg.model.sequence_preprocess,
+                    "max_length": cfg.model.max_length,
+                    "num_labels": cfg.train.num_labels,
+                    "learning_rate": cfg.train.learning_rate,
+                    "epochs": cfg.train.epochs,
+                    "train_bs": cfg.train.train_bs,
+                    "eval_bs": cfg.train.eval_bs,
+                    "weight_decay": cfg.train.weight_decay,
+                    "seed": cfg.seed,
+                    "fallback_model_wrapper": model_load_info.used_fallback,
+                    "device": device_name,
+                }
+            )
+
     started = time.perf_counter()
     status = "failed"
     error_message = None
+    train_metrics: dict[str, object] = {}
+    validation_metrics: dict[str, object] = {}
+    test_metrics: dict[str, object] = {}
 
     try:
         train_result = trainer.train()
@@ -236,10 +330,23 @@ def main(cfg: DictConfig):
             "validation": validation_metrics,
             "test": test_metrics,
             "output_dir": outdir,
+            "device": device_name,
         }
 
         _ = save_run_summary(outdir, summary)
         _ = append_leaderboard_row(cfg.train.leaderboard_csv, summary)
+
+        if mlflow_client is not None:
+            all_metrics = {
+                **numeric_metrics(train_metrics),
+                **numeric_metrics(validation_metrics),
+                **numeric_metrics(test_metrics),
+                "runtime_seconds": runtime_seconds,
+            }
+            if all_metrics:
+                mlflow_client.log_metrics(all_metrics)
+            mlflow_client.log_dict(summary, "run_summary.json")
+            mlflow_client.end_run(status="FINISHED" if status == "completed" else "FAILED")
 
 
 if __name__ == "__main__":
