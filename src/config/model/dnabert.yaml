@@ -1,5 +1,6 @@
-name: zhihan1996/DNA_bert_6
+name: zhihan1996/DNA_bert_3
 trust_remote_code: false
 max_length: 512
-sequence_preprocess: dna
+sequence_preprocess: kmer
+kmer: 3
 import_modules: []
