@@ -74,6 +74,7 @@ def append_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:
         "test_roc_auc": _to_float(test.get("test_roc_auc")),
         "train_runtime": _to_float(train.get("train_runtime")),
         "train_samples_per_second": _to_float(train.get("train_samples_per_second")),
+        "device": summary.get("device"),
         "git_commit": summary.get("git_commit"),
     }
 
