@@ -1,0 +1,5 @@
+name: zhihan1996/DNA_bert_6
+trust_remote_code: false
+max_length: 512
+sequence_preprocess: dna
+import_modules: []

@@ -1,5 +1,5 @@
 defaults:
-  - model: dnabert2
+  - model: dnabert
   - data: promoter
   - train: default
   - _self_

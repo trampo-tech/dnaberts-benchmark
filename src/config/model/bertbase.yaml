@@ -2,3 +2,4 @@ name: bert-base-uncased
 trust_remote_code: false
 max_length: 512
 sequence_preprocess: baseline_char
+import_modules: []

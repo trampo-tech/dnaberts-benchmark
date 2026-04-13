@@ -1,0 +1,5 @@
+name: InstaDeepAI/nucleotide-transformer-v2-500m-multi-species
+trust_remote_code: true
+max_length: 512
+sequence_preprocess: dna
+import_modules: []
