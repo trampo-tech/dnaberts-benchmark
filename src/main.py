@@ -206,7 +206,7 @@ def main(cfg: DictConfig):
 
     model_config: Any = getattr(model, "config", None)
 
-    if bool(getattr(cfg.model, "set_label_mapping", True)) and model_config is not None:
+    if model_config is not None:
         model_config.num_labels = int(cfg.train.num_labels)
         model_config.id2label = {i: f"LABEL_{i}" for i in range(int(cfg.train.num_labels))}
         model_config.label2id = {label: idx for idx, label in model_config.id2label.items()}

@@ -4,5 +4,3 @@ max_length: 512
 sequence_preprocess: dna
 import_modules: []
 label_mode: class_index
-problem_type: single_label_classification
-set_label_mapping: true

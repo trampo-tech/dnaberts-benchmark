@@ -5,5 +5,3 @@ sequence_preprocess: kmer
 kmer: 3
 import_modules: []
 label_mode: class_index
-problem_type: single_label_classification
-set_label_mapping: true

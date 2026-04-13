@@ -5,5 +5,4 @@ sequence_preprocess: rna_t_to_u
 import_modules:
   - multimolecule
 label_mode: one_hot
-problem_type: multilabel_classification
-set_label_mapping: true
+problem_type: single_label_classification
