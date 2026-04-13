@@ -18,8 +18,8 @@ from transformers import (
     Trainer,
     TrainingArguments,
 )
-from transformers.tokenization_utils_tokenizers import TokenizersBackend
 
+# from transformers.tokenization_utils_tokenizers import TokenizersBackend
 from modeling.train import load_model_for_sequence_classification
 from services.benchmark_logger import (
     append_leaderboard_row,
@@ -46,12 +46,12 @@ def import_optional_modules(modules: list[str] | None):
         importlib.import_module(module_name)
 
 
-def preprocess_seq(seq: str, mode: str, cfg:DictConfig) -> str:
+def preprocess_seq(seq: str, mode: str, cfg: DictConfig) -> str:
     s = seq.upper()
     if mode == "rna_t_to_u":
         return s.replace("T", "U")
     if mode == "kmer":
-        kmer:int = cfg.model.kmer
+        kmer: int = cfg.model.kmer
         if len(s) < kmer:
             return s
         return " ".join(s[i : i + kmer] for i in range(len(s) - (kmer - 1)))
@@ -67,7 +67,7 @@ def estimate_unk_ratio(
     special_token_ids: set[int],
     sample_size: int = 256,
 ) -> float | None:
-    """ Estimates the ratio of unknown tokens given to the model, the lower the better (less unknown tokens)"""
+    """Estimates the ratio of unknown tokens given to the model, the lower the better (less unknown tokens)"""
 
     if unk_token_id is None:
         return None
@@ -113,22 +113,38 @@ def numeric_metrics(metrics: dict[str, object]) -> dict[str, float]:
 
 
 class BenchmarkTrainer(Trainer):
-    def __init__(self, *args, label_mode: str = "class_index", label_num_classes: int | None = None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        label_mode: str = "class_index",
+        label_num_classes: int | None = None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.label_mode = label_mode
         self.label_num_classes = label_num_classes
 
-    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+    def compute_loss(
+        self, model, inputs, return_outputs=False, num_items_in_batch=None
+    ):
         labels = inputs.get("labels")
 
-        if labels is not None and self.label_mode == "one_hot" and getattr(labels, "ndim", 0) == 1:
+        if (
+            labels is not None
+            and self.label_mode == "one_hot"
+            and getattr(labels, "ndim", 0) == 1
+        ):
             num_classes = self.label_num_classes
             if num_classes is None:
-                num_classes = int(getattr(getattr(model, "config", None), "num_labels", 0) or 0)
+                num_classes = int(
+                    getattr(getattr(model, "config", None), "num_labels", 0) or 0
+                )
             if num_classes <= 1:
                 raise ValueError("label_mode=one_hot requires num_labels > 1")
 
-            one_hot = F.one_hot(labels.to(torch.long), num_classes=num_classes).to(dtype=torch.float32)
+            one_hot = F.one_hot(labels.to(torch.long), num_classes=num_classes).to(
+                dtype=torch.float32
+            )
             inputs = dict(inputs)
             inputs["labels"] = one_hot
 
@@ -171,7 +187,8 @@ def main(cfg: DictConfig):
 
     def tokenize(batch):
         seqs = [
-            preprocess_seq(x, cfg.model.sequence_preprocess, cfg) for x in batch[text_col]
+            preprocess_seq(x, cfg.model.sequence_preprocess, cfg)
+            for x in batch[text_col]
         ]
         out = tokenizer(seqs, truncation=True, max_length=cfg.model.max_length)
         out["label"] = [int(x) for x in batch[label_col]]
@@ -202,14 +219,20 @@ def main(cfg: DictConfig):
 
     label_mode = str(getattr(cfg.model, "label_mode", "class_index"))
     if label_mode not in {"class_index", "one_hot"}:
-        raise ValueError(f"Unsupported model.label_mode={label_mode}. Use class_index or one_hot.")
+        raise ValueError(
+            f"Unsupported model.label_mode={label_mode}. Use class_index or one_hot."
+        )
 
     model_config: Any = getattr(model, "config", None)
 
     if model_config is not None:
         model_config.num_labels = int(cfg.train.num_labels)
-        model_config.id2label = {i: f"LABEL_{i}" for i in range(int(cfg.train.num_labels))}
-        model_config.label2id = {label: idx for idx, label in model_config.id2label.items()}
+        model_config.id2label = {
+            i: f"LABEL_{i}" for i in range(int(cfg.train.num_labels))
+        }
+        model_config.label2id = {
+            label: idx for idx, label in model_config.id2label.items()
+        }
 
     configured_problem_type = getattr(cfg.model, "problem_type", None)
     if configured_problem_type is not None and model_config is not None:
@@ -229,13 +252,13 @@ def main(cfg: DictConfig):
             "accuracy": acc_metric.compute(predictions=preds, references=labels)[  # type: ignore
                 "accuracy"
             ],
-            "f1": f1_metric.compute(predictions=preds, references=labels)["f1"], # type: ignore
-            "precision": prec_metric.compute(predictions=preds, references=labels)[ # type: ignore
+            "f1": f1_metric.compute(predictions=preds, references=labels)["f1"],  # type: ignore
+            "precision": prec_metric.compute(predictions=preds, references=labels)[  # type: ignore
                 "precision"
-            ], 
-            "recall": rec_metric.compute(predictions=preds, references=labels)[ # type: ignore
+            ],
+            "recall": rec_metric.compute(predictions=preds, references=labels)[  # type: ignore
                 "recall"
-            ], 
+            ],
         }
 
         unique_labels = np.unique(labels)
@@ -338,12 +361,14 @@ def main(cfg: DictConfig):
 
     try:
         train_result = trainer.train()
-        train_metrics = train_result.metrics # type:ignore
+        train_metrics = train_result.metrics  # type:ignore
         validation_metrics = trainer.evaluate(  # type:ignore
-            eval_dataset=tokenized["validation"], metric_key_prefix="validation" # type:ignore
+            eval_dataset=tokenized["validation"],
+            metric_key_prefix="validation",  # type:ignore
         )
         test_metrics = trainer.evaluate(  # type:ignore
-            eval_dataset=tokenized["test"], metric_key_prefix="test" # type:ignore
+            eval_dataset=tokenized["test"],
+            metric_key_prefix="test",  # type:ignore
         )
         print("Validation:", validation_metrics)
         print("Test:", test_metrics)
@@ -393,7 +418,9 @@ def main(cfg: DictConfig):
             if all_metrics:
                 mlflow_client.log_metrics(all_metrics)
             mlflow_client.log_dict(summary, "run_summary.json")
-            mlflow_client.end_run(status="FINISHED" if status == "completed" else "FAILED")
+            mlflow_client.end_run(
+                status="FINISHED" if status == "completed" else "FAILED"
+            )
 
 
 if __name__ == "__main__":

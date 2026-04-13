@@ -30,7 +30,7 @@ baseline = [
 nucleotide = [
     "tf-keras>=2.20.1",
     "tokenizers>=0.22.2",
-    "transformers<5",
+    "transformers==4.57.1",
 ]
 
 [tool.uv]
@@ -45,6 +45,6 @@ conflicts = [
 mlflow-ui = "mlflow ui --backend-store-uri file:./mlruns --host 127.0.0.1 --port 5000"
 
 [[tool.uv.index]]
-name = "pytorch-cu126"
-url = "https://download.pytorch.org/whl/cu126"
+name = "pytorch-cu13"
+url = "https://download.pytorch.org/whl/cu13"
 explicit = true
