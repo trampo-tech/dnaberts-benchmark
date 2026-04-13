@@ -4,3 +4,6 @@ max_length: 512
 sequence_preprocess: rna_t_to_u
 import_modules:
   - multimolecule
+label_mode: one_hot
+problem_type: multilabel_classification
+set_label_mapping: true

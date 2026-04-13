@@ -2,11 +2,13 @@ import importlib
 import os
 import random
 import time
+from typing import Any
 
 import evaluate
 import hydra
 import numpy as np
 import torch
+import torch.nn.functional as F
 from datasets import load_dataset
 from omegaconf import DictConfig, OmegaConf
 from sklearn.metrics import roc_auc_score
@@ -110,6 +112,34 @@ def numeric_metrics(metrics: dict[str, object]) -> dict[str, float]:
     return out
 
 
+class BenchmarkTrainer(Trainer):
+    def __init__(self, *args, label_mode: str = "class_index", label_num_classes: int | None = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.label_mode = label_mode
+        self.label_num_classes = label_num_classes
+
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
+        labels = inputs.get("labels")
+
+        if labels is not None and self.label_mode == "one_hot" and getattr(labels, "ndim", 0) == 1:
+            num_classes = self.label_num_classes
+            if num_classes is None:
+                num_classes = int(getattr(getattr(model, "config", None), "num_labels", 0) or 0)
+            if num_classes <= 1:
+                raise ValueError("label_mode=one_hot requires num_labels > 1")
+
+            one_hot = F.one_hot(labels.to(torch.long), num_classes=num_classes).to(dtype=torch.float32)
+            inputs = dict(inputs)
+            inputs["labels"] = one_hot
+
+        return super().compute_loss(
+            model,
+            inputs,
+            return_outputs=return_outputs,
+            num_items_in_batch=num_items_in_batch,
+        )
+
+
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
@@ -144,7 +174,7 @@ def main(cfg: DictConfig):
             preprocess_seq(x, cfg.model.sequence_preprocess, cfg) for x in batch[text_col]
         ]
         out = tokenizer(seqs, truncation=True, max_length=cfg.model.max_length)
-        out["label"] = batch[label_col]
+        out["label"] = [int(x) for x in batch[label_col]]
         return out
 
     tokenized = ds.map(tokenize, batched=True)
@@ -169,6 +199,21 @@ def main(cfg: DictConfig):
         num_labels=cfg.train.num_labels,
         trust_remote_code=cfg.model.trust_remote_code,
     )
+
+    label_mode = str(getattr(cfg.model, "label_mode", "class_index"))
+    if label_mode not in {"class_index", "one_hot"}:
+        raise ValueError(f"Unsupported model.label_mode={label_mode}. Use class_index or one_hot.")
+
+    model_config: Any = getattr(model, "config", None)
+
+    if bool(getattr(cfg.model, "set_label_mapping", True)) and model_config is not None:
+        model_config.num_labels = int(cfg.train.num_labels)
+        model_config.id2label = {i: f"LABEL_{i}" for i in range(int(cfg.train.num_labels))}
+        model_config.label2id = {label: idx for idx, label in model_config.id2label.items()}
+
+    configured_problem_type = getattr(cfg.model, "problem_type", None)
+    if configured_problem_type is not None and model_config is not None:
+        model_config.problem_type = str(configured_problem_type)
 
     acc_metric = evaluate.load("accuracy")
     f1_metric = evaluate.load("f1")
@@ -226,13 +271,15 @@ def main(cfg: DictConfig):
         run_name=run_id,
     )
 
-    trainer = Trainer(
+    trainer = BenchmarkTrainer(
         model=model,
         args=args,
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["validation"],
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
+        label_mode=label_mode,
+        label_num_classes=int(cfg.train.num_labels),
     )
 
     mlflow_client = None
@@ -291,12 +338,12 @@ def main(cfg: DictConfig):
 
     try:
         train_result = trainer.train()
-        train_metrics = train_result.metrics
-        validation_metrics = trainer.evaluate(
-            eval_dataset=tokenized["validation"], metric_key_prefix="validation"
+        train_metrics = train_result.metrics # type:ignore
+        validation_metrics = trainer.evaluate(  # type:ignore
+            eval_dataset=tokenized["validation"], metric_key_prefix="validation" # type:ignore
         )
-        test_metrics = trainer.evaluate(
-            eval_dataset=tokenized["test"], metric_key_prefix="test"
+        test_metrics = trainer.evaluate(  # type:ignore
+            eval_dataset=tokenized["test"], metric_key_prefix="test" # type:ignore
         )
         print("Validation:", validation_metrics)
         print("Test:", test_metrics)
