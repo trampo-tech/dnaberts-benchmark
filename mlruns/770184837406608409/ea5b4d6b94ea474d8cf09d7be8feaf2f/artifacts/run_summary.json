@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-04-13T22:57:42Z",
+  "run_id": "promoter_binary__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260413T225740Z",
+  "status": "failed",
+  "error": "CUDA out of memory. Tried to allocate 20.00 MiB. GPU 0 has a total capacity of 11.62 GiB of which 46.06 MiB is free. Process 3630 has 160.28 MiB memory in use. Process 11992 has 5.79 MiB memory in use. Process 12766 has 3.11 GiB memory in use. Including non-PyTorch memory, this process has 7.34 GiB memory in use. Of the allocated memory 6.99 GiB is allocated by PyTorch, and 212.92 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+  "experiment": "promoter_binary",
+  "model_name": "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 16,
+  "eval_bs": 32,
+  "learning_rate": 2e-05,
+  "max_length": 512,
+  "git_commit": "b80c4ec",
+  "runtime_seconds": 0.8381651840008999,
+  "train": {},
+  "validation": {},
+  "test": {},
+  "output_dir": "runs/promoter_binary/InstaDeepAI_nucleotide-transformer-v2-500m-multi-species",
+  "device": "NVIDIA GeForce RTX 3060"
+}

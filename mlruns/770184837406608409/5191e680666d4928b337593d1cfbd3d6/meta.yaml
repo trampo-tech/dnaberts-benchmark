@@ -1,0 +1,14 @@
+artifact_uri: file:///home/blau/projects/dnaberts-benchmark/mlruns/770184837406608409/5191e680666d4928b337593d1cfbd3d6/artifacts
+end_time: 1776121027342
+entry_point_name: ''
+experiment_id: '770184837406608409'
+lifecycle_stage: active
+run_id: 5191e680666d4928b337593d1cfbd3d6
+run_name: promoter_binary__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260413T225705Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776121026212
+status: 4
+tags: []
+user_id: blau

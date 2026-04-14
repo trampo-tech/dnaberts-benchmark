@@ -1,0 +1,8 @@
+artifact_location: file:///home/blau/projects/dnaberts-benchmark/mlruns/770184837406608409
+creation_time: 1776120349882
+experiment_id: '770184837406608409'
+last_update_time: 1776120349882
+lifecycle_stage: active
+name: local_blau_test
+trace_location: null
+workspace: default

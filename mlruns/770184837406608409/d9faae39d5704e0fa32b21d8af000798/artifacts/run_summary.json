@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-04-14T00:05:15Z",
+  "run_id": "promoter_binary__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260413T225943Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "promoter_binary",
+  "model_name": "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 16,
+  "eval_bs": 32,
+  "learning_rate": 2e-05,
+  "max_length": 512,
+  "git_commit": "ca96d28",
+  "runtime_seconds": 3931.251184453,
+  "train": {
+    "train_runtime": 3865.1245,
+    "train_samples_per_second": 36.756,
+    "train_steps_per_second": 2.297,
+    "total_flos": 2.9523380589791544e+16,
+    "train_loss": 0.11094434784372915,
+    "epoch": 3.0
+  },
+  "validation": {
+    "validation_loss": 0.3151112198829651,
+    "validation_accuracy": 0.9450920763642507,
+    "validation_f1": 0.9443397842096249,
+    "validation_precision": 0.9572916666666667,
+    "validation_recall": 0.9317336938154782,
+    "validation_roc_auc": 0.9834958395367316,
+    "validation_runtime": 32.0309,
+    "validation_samples_per_second": 184.79,
+    "validation_steps_per_second": 5.776,
+    "epoch": 3.0
+  },
+  "test": {
+    "test_loss": 0.3155082166194916,
+    "test_accuracy": 0.9459459459459459,
+    "test_f1": 0.9450738070717474,
+    "test_precision": 0.9605722260990928,
+    "test_recall": 0.9300675675675676,
+    "test_roc_auc": 0.9828141549488678,
+    "test_runtime": 32.0867,
+    "test_samples_per_second": 184.5,
+    "test_steps_per_second": 5.766,
+    "epoch": 3.0
+  },
+  "output_dir": "runs/promoter_binary/InstaDeepAI_nucleotide-transformer-v2-500m-multi-species",
+  "device": "NVIDIA GeForce RTX 3060"
+}
