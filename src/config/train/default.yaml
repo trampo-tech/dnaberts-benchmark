@@ -3,12 +3,12 @@ leaderboard_csv: ${hydra:runtime.cwd}/reports/benchmark_results.csv
 num_labels: 2
 learning_rate: 2e-5
 epochs: 3
-train_bs: 64 # bs = batch_size
-eval_bs: 128
+train_bs: 16 # bs = batch_size
+eval_bs: 32
 weight_decay: 0.01
-eval_strategy: epoch
+eval_strategy: steps
 save_strategy: best
-logging_steps: 50
+logging_steps: 20
 metric_for_best_model: f1
 fp16: true
 report_to: mlflow 
