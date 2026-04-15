@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/568340950445720901/8b9ad6a26b4b4136854a33ebdb4fdadd/artifacts
+end_time: 1776255867826
+entry_point_name: ''
+experiment_id: '568340950445720901'
+lifecycle_stage: active
+run_id: 8b9ad6a26b4b4136854a33ebdb4fdadd
+run_name: promoter_binary__multimolecule_rnabert__20260415T121802Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776255484802
+status: 3
+tags: []
+user_id: azureuser

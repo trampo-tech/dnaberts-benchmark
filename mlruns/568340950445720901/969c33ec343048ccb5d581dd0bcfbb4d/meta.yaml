@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/568340950445720901/969c33ec343048ccb5d581dd0bcfbb4d/artifacts
+end_time: 1776270860669
+entry_point_name: ''
+experiment_id: '568340950445720901'
+lifecycle_stage: active
+run_id: 969c33ec343048ccb5d581dd0bcfbb4d
+run_name: promoter_binary__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260415T162339Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776270220324
+status: 3
+tags: []
+user_id: azureuser

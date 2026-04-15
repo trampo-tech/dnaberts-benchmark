@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/568340950445720901/7ab8467640af469da3d612d4dc198d5f/artifacts
+end_time: 1776268925847
+entry_point_name: ''
+experiment_id: '568340950445720901'
+lifecycle_stage: active
+run_id: 7ab8467640af469da3d612d4dc198d5f
+run_name: promoter_binary__bert-base-uncased__20260415T151821Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776266309489
+status: 3
+tags: []
+user_id: azureuser
