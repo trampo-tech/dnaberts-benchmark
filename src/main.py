@@ -386,7 +386,7 @@ def main(cfg: DictConfig):
             "run_id": run_id,
             "status": status,
             "error": error_message,
-            "experiment": cfg.experiment_name,
+            "experiment": cfg.data,
             "model_name": cfg.model.name,
             "model_fallback": model_load_info.used_fallback,
             "model_fallback_reason": model_load_info.fallback_reason,

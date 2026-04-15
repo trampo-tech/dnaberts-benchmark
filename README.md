@@ -80,7 +80,45 @@ Key tracked metrics:
 
 ### Data
 
-```markdown
-**TODO**
+Default task: promoter vs background using:
+- `data/raw/epdnew_400bp.fa`
+- `data/raw/epdnew_biasaway_400bp.fa`
+
+TATA-related positives:
+- `data/raw/epdnew_TATA_1000bp.fa`
+- `data/raw/epdnew_TATAless_1000bp.fa`
+
+Background FASTA files (assumed already available):
+- `data/raw/epdnew_TATA_biasaway_1000bp.fa`
+- `data/raw/epdnew_TATAless_biasaway_1000bp.fa`
+
+Build binary datasets (recommended for paper robustness):
+- `tata_vs_background_1000bp.csv`
+- `tataless_vs_background_1000bp.csv`
+
+```bash
+uv run python scripts/create_tata_dataset.py --task binary
+```
+
+Optionally also build TATA vs TATA-less disambiguation:
+
+```bash
+uv run python scripts/create_tata_dataset.py --task disambiguation
+```
+
+Split datasets:
+
+```bash
+uv run python scripts/split_tata_dataset.py --input-csv data/raw/tata_vs_background_1000bp.csv --output-dir data/processed/tata_vs_background
+uv run python scripts/split_tata_dataset.py --input-csv data/raw/tataless_vs_background_1000bp.csv --output-dir data/processed/tataless_vs_background
+uv run python scripts/split_tata_dataset.py --input-csv data/raw/tata_vs_tataless_1000bp.csv --output-dir data/processed/tata_vs_tataless
+```
+
+Run training on new tasks (without replacing defaults):
+
+```bash
+uv run python src/main.py data=tata_promoter experiment_name=tata_vs_tataless
+uv run python src/main.py data=tata_vs_background experiment_name=tata_vs_background
+uv run python src/main.py data=tataless_vs_background experiment_name=tataless_vs_background
 ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
