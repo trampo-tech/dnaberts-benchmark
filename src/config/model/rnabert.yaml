@@ -1,6 +1,6 @@
 name: multimolecule/rnabert
 trust_remote_code: true
-max_length: 512
+max_length: 440 # breaks if set above
 sequence_preprocess: rna_t_to_u
 import_modules:
   - multimolecule
