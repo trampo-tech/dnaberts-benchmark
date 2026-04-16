@@ -15,6 +15,7 @@ from sklearn.metrics import roc_auc_score
 from transformers import (
     AutoTokenizer,
     DataCollatorWithPadding,
+    EarlyStoppingCallback,
     Trainer,
     TrainingArguments,
 )
@@ -275,24 +276,47 @@ def main(cfg: DictConfig):
     )
     run_id = build_run_id(cfg.experiment_name, cfg.model.name)
 
-    args = TrainingArguments(
-        output_dir=outdir,
-        eval_strategy=cfg.train.eval_strategy,
-        save_strategy=cfg.train.save_strategy,
-        logging_steps=cfg.train.logging_steps,
-        learning_rate=cfg.train.learning_rate,
-        per_device_train_batch_size=cfg.train.train_bs,
-        per_device_eval_batch_size=cfg.train.eval_bs,
-        num_train_epochs=cfg.train.epochs,
-        weight_decay=cfg.train.weight_decay,
-        load_best_model_at_end=True,
-        metric_for_best_model=cfg.train.metric_for_best_model,
-        greater_is_better=True,
-        report_to=cfg.train.report_to,
-        fp16=cfg.train.fp16,
-        seed=cfg.seed,
-        run_name=run_id,
-    )
+    training_args_kwargs: dict[str, Any] = {
+        "output_dir": outdir,
+        "eval_strategy": cfg.train.eval_strategy,
+        "save_strategy": cfg.train.save_strategy,
+        "logging_steps": cfg.train.logging_steps,
+        "learning_rate": cfg.train.learning_rate,
+        "per_device_train_batch_size": cfg.train.train_bs,
+        "per_device_eval_batch_size": cfg.train.eval_bs,
+        "num_train_epochs": cfg.train.epochs,
+        "weight_decay": cfg.train.weight_decay,
+        "load_best_model_at_end": True,
+        "metric_for_best_model": cfg.train.metric_for_best_model,
+        "greater_is_better": True,
+        "report_to": cfg.train.report_to,
+        "fp16": cfg.train.fp16,
+        "seed": cfg.seed,
+        "run_name": run_id,
+    }
+
+    if str(cfg.train.eval_strategy) == "steps" and getattr(cfg.train, "eval_steps", None):
+        training_args_kwargs["eval_steps"] = int(cfg.train.eval_steps)
+
+    if str(cfg.train.save_strategy) == "steps" and getattr(cfg.train, "save_steps", None):
+        training_args_kwargs["save_steps"] = int(cfg.train.save_steps)
+
+    if getattr(cfg.train, "save_total_limit", None) is not None:
+        training_args_kwargs["save_total_limit"] = int(cfg.train.save_total_limit)
+
+    args = TrainingArguments(**training_args_kwargs)
+
+    trainer_callbacks = []
+    early_stopping_patience = int(getattr(cfg.train, "early_stopping_patience", 0) or 0)
+    if early_stopping_patience > 0:
+        trainer_callbacks.append(
+            EarlyStoppingCallback(
+                early_stopping_patience=early_stopping_patience,
+                early_stopping_threshold=float(
+                    getattr(cfg.train, "early_stopping_threshold", 0.0) or 0.0
+                ),
+            )
+        )
 
     trainer = BenchmarkTrainer(
         model=model,
@@ -301,6 +325,7 @@ def main(cfg: DictConfig):
         eval_dataset=tokenized["validation"],
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
+        callbacks=trainer_callbacks,
         label_mode=label_mode,
         label_num_classes=int(cfg.train.num_labels),
     )
@@ -386,7 +411,7 @@ def main(cfg: DictConfig):
             "run_id": run_id,
             "status": status,
             "error": error_message,
-            "experiment": cfg.data,
+            "experiment": cfg.experiment_name,
             "model_name": cfg.model.name,
             "model_fallback": model_load_info.used_fallback,
             "model_fallback_reason": model_load_info.fallback_reason,

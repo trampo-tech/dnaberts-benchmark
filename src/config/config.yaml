@@ -4,5 +4,5 @@ defaults:
   - train: default
   - _self_
 
-experiment_name: promoter_binary
+experiment_name: ${hydra:runtime.choices.data}
 seed: 42

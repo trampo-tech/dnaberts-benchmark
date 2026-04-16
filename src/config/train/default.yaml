@@ -8,8 +8,12 @@ eval_bs: 32
 weight_decay: 0.01
 eval_strategy: steps
 save_strategy: best
+save_total_limit: 1
 logging_steps: 20
+eval_steps: 200
 metric_for_best_model: f1
+early_stopping_patience: 2
+early_stopping_threshold: 0.0
 fp16: true
 report_to: mlflow 
 enable_mlflow: true
