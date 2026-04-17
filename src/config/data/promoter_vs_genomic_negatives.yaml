@@ -1,0 +1,5 @@
+train_csv: data/processed/promoter_vs_genomic_negatives/train.csv
+val_csv: data/processed/promoter_vs_genomic_negatives/val.csv
+test_csv: data/processed/promoter_vs_genomic_negatives/test.csv
+text_col: sequence
+label_col: label

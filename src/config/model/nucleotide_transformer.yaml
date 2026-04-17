@@ -1,7 +1,7 @@
+type: transformer
 name: InstaDeepAI/nucleotide-transformer-v2-500m-multi-species
 trust_remote_code: true
 revision: null  # pin to HF commit hash for reproducibility
 max_length: 512
-sequence_preprocess: dna
 import_modules: []
 label_mode: class_index

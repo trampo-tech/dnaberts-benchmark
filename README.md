@@ -109,9 +109,9 @@ uv run python scripts/create_tata_dataset.py --task disambiguation
 Split datasets:
 
 ```bash
-uv run python scripts/split_tata_dataset.py --input-csv data/raw/tata_vs_background_1000bp.csv --output-dir data/processed/tata_vs_background
-uv run python scripts/split_tata_dataset.py --input-csv data/raw/tataless_vs_background_1000bp.csv --output-dir data/processed/tataless_vs_background
-uv run python scripts/split_tata_dataset.py --input-csv data/raw/tata_vs_tataless_1000bp.csv --output-dir data/processed/tata_vs_tataless
+uv run scripts/split_dataset.py --dataset tata_vs_background
+uv run scripts/split_dataset.py --dataset tataless_vs_background
+uv run scripts/split_dataset.py --input-csv data/raw/tata_vs_tataless_1000bp.csv --output-dir data/processed/tata_vs_tataless
 ```
 
 Run training on new tasks (without replacing defaults):
