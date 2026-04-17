@@ -109,18 +109,21 @@ def load_model_for_sequence_classification(
 	model_name: str,
 	num_labels: int,
 	trust_remote_code: bool,
+	revision: str | None = None,
 ) -> tuple[nn.Module, ModelLoadInfo]:
 	try:
 		model = AutoModelForSequenceClassification.from_pretrained(
 			model_name,
 			num_labels=num_labels,
 			trust_remote_code=trust_remote_code,
+			revision=revision,
 		)
 		return model, ModelLoadInfo(used_fallback=False)
 	except Exception as exc:
 		backbone = AutoModel.from_pretrained(
 			model_name,
 			trust_remote_code=trust_remote_code,
+			revision=revision,
 		)
 		model = BackboneSequenceClassifier(backbone=backbone, num_labels=num_labels)
 		return model, ModelLoadInfo(used_fallback=True, fallback_reason=str(exc))

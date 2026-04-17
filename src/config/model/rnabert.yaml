@@ -1,8 +1,9 @@
 name: multimolecule/rnabert
 trust_remote_code: true
+revision: null  # pin to HF commit hash for reproducibility
 max_length: 440 # breaks if set above
 sequence_preprocess: rna_t_to_u
 import_modules:
   - multimolecule
-label_mode: one_hot
+label_mode: class_index
 problem_type: single_label_classification

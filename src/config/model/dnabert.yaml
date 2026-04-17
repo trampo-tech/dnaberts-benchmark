@@ -1,5 +1,6 @@
 name: zhihan1996/DNA_bert_3
 trust_remote_code: false
+revision: null  # pin to HF commit hash for reproducibility
 max_length: 512
 sequence_preprocess: kmer
 kmer: 3
