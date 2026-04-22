@@ -5,3 +5,4 @@ revision: null  # pin to HF commit hash for reproducibility
 max_length: 512
 import_modules: []
 label_mode: class_index
+disable_triton: true  # Triton kernels fail to compile; fall back to PyTorch attention

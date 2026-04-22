@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import os
+import sys
 import time
 from typing import Any
 
@@ -33,6 +34,17 @@ from services.metrics import (
     compute_metrics_from_logits,
     numeric_metrics,
 )
+
+
+def _block_triton_imports() -> None:
+    """Insert ``None`` into sys.modules for triton and its sub-packages.
+
+    This forces ``import triton`` (and any sub-import) to raise
+    ``ImportError``, which makes DNABERT-2's flash-attention remote code
+    fall back to the pure-PyTorch attention path.
+    """
+    for key in ("triton", "triton.language", "triton.compiler", "triton.runtime"):
+        sys.modules[key] = None  # type: ignore[assignment]
 
 
 def _import_optional_modules(modules: list[str] | None):
@@ -116,6 +128,9 @@ class BenchmarkTrainer(Trainer):
 
 
 def run(cfg: DictConfig) -> None:
+    if getattr(cfg.model, "disable_triton", False):
+        _block_triton_imports()
+
     device_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"
     print(f"  Device: {'cuda' if torch.cuda.is_available() else 'cpu'} ({device_name})")
 
@@ -132,6 +147,11 @@ def run(cfg: DictConfig) -> None:
 
     text_col = cfg.data.text_col
     label_col = cfg.data.label_col
+    label_offset = int(getattr(cfg.data, "label_offset", 0))
+
+    num_labels = int(
+        getattr(cfg.data, "num_labels", None) or cfg.train.num_labels
+    )
 
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model.name, trust_remote_code=cfg.model.trust_remote_code
@@ -140,7 +160,7 @@ def run(cfg: DictConfig) -> None:
     def tokenize(batch):
         seqs = [_preprocess_seq(x) for x in batch[text_col]]
         out = tokenizer(seqs, truncation=True, max_length=cfg.model.max_length)
-        out["label"] = [int(x) for x in batch[label_col]]
+        out["label"] = [int(x) - label_offset for x in batch[label_col]]
         return out
 
     tokenized = ds.map(tokenize, batched=True)
@@ -162,7 +182,7 @@ def run(cfg: DictConfig) -> None:
 
     model, model_load_info = load_model_for_sequence_classification(
         cfg.model.name,
-        num_labels=cfg.train.num_labels,
+        num_labels=num_labels,
         trust_remote_code=cfg.model.trust_remote_code,
     )
 
@@ -175,9 +195,9 @@ def run(cfg: DictConfig) -> None:
     model_config: Any = getattr(model, "config", None)
 
     if model_config is not None:
-        model_config.num_labels = int(cfg.train.num_labels)
+        model_config.num_labels = num_labels
         model_config.id2label = {
-            i: f"LABEL_{i}" for i in range(int(cfg.train.num_labels))
+            i: f"LABEL_{i}" for i in range(num_labels)
         }
         model_config.label2id = {
             label: idx for idx, label in model_config.id2label.items()
@@ -195,7 +215,8 @@ def run(cfg: DictConfig) -> None:
     def compute_metrics(eval_pred):
         logits, labels = eval_pred
         return compute_metrics_from_logits(
-            logits, labels, acc_metric, f1_metric, prec_metric, rec_metric
+            logits, labels, acc_metric, f1_metric, prec_metric, rec_metric,
+            num_labels=num_labels,
         )
 
     outdir = os.path.join(
@@ -254,7 +275,7 @@ def run(cfg: DictConfig) -> None:
         compute_metrics=compute_metrics,
         callbacks=trainer_callbacks,
         label_mode=label_mode,
-        label_num_classes=int(cfg.train.num_labels),
+        label_num_classes=num_labels,
     )
 
     mlflow_client = None
