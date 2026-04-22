@@ -1,0 +1,7 @@
+train_csv: data/processed/leannmlindsey_GUE_prom_300_notata/train.csv 
+val_csv: data/processed/leannmlindsey_GUE_prom_300_notata/validation.csv
+test_csv: data/processed/leannmlindsey_GUE_prom_300_notata/test.csv
+text_col: sequence
+label_col: label
+
+# uv run  scripts/prepare_hf_dataset.py leannmlindsey/GUE --task prom_300_notata

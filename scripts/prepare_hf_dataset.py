@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
 def load_hf_dataset(dataset_id: str, task: str | None, sequence_length: int | None):
     load_kwargs = {"download_mode": DownloadMode.FORCE_REDOWNLOAD}
     if task:
-        load_kwargs["task_name"] = task
+        load_kwargs["name"] = task
     if sequence_length:
         load_kwargs["sequence_length"] = sequence_length
 
@@ -103,12 +103,13 @@ def detect_columns(d):
 def main() -> None:
     args = parse_args()
     dataset_id = args.dataset_id
+    task = args.task 
     print("Loading dataset:", dataset_id)
 
     ds = load_hf_dataset(dataset_id, args.task, args.sequence_length)
     print("Available splits:", list(ds.keys()))
 
-    outdir = os.path.join("data", "processed", dataset_id.replace("/", "_"))
+    outdir = os.path.join("data", "processed", dataset_id.replace("/", "_") + "_" + task )
     os.makedirs(outdir, exist_ok=True)
 
     if "validation" not in ds:

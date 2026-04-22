@@ -59,14 +59,29 @@ def _evaluate_split(
     model: LogisticRegression, X: np.ndarray, y: np.ndarray, prefix: str
 ) -> dict[str, float]:
     preds = model.predict(X)
-    probs = model.predict_proba(X)[:, 1]
+    probs = model.predict_proba(X)
+    unique_labels = np.unique(y)
+    average = "binary" if len(model.classes_) <= 2 else "weighted"
+
+    if len(unique_labels) > 1:
+        if probs.ndim == 2 and probs.shape[1] > 2:
+            roc_auc = roc_auc_score(y, probs, multi_class="ovr")
+        else:
+            positive_probs = probs[:, 1] if probs.ndim == 2 else probs
+            roc_auc = roc_auc_score(y, positive_probs)
+    else:
+        roc_auc = 0.0
 
     return {
         f"{prefix}_accuracy": accuracy_score(y, preds),
-        f"{prefix}_f1": f1_score(y, preds),
-        f"{prefix}_precision": precision_score(y, preds),
-        f"{prefix}_recall": recall_score(y, preds),
-        f"{prefix}_roc_auc": roc_auc_score(y, probs),
+        f"{prefix}_f1": f1_score(y, preds, average=average, zero_division=0),
+        f"{prefix}_precision": precision_score(
+            y, preds, average=average, zero_division=0
+        ),
+        f"{prefix}_recall": recall_score(
+            y, preds, average=average, zero_division=0
+        ),
+        f"{prefix}_roc_auc": roc_auc,
     }
 
 
