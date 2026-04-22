@@ -1,0 +1,9 @@
+task: ???  # REQUIRED — e.g. prom_300_tata, virus_covid, fungi_species_20
+
+train_csv: data/processed/leannmlindsey_GUE_${data.task}/train.csv
+val_csv: data/processed/leannmlindsey_GUE_${data.task}/validation.csv
+test_csv: data/processed/leannmlindsey_GUE_${data.task}/test.csv
+text_col: sequence
+label_col: label
+num_labels: 2
+label_offset: 0

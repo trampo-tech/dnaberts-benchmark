@@ -1,9 +1,0 @@
-train_csv: data/processed/leannmlindsey_GUE_fungi_species_20/train.csv 
-val_csv: data/processed/leannmlindsey_GUE_fungi_species_20/validation.csv
-test_csv: data/processed/leannmlindsey_GUE_fungi_species_20/test.csv
-text_col: sequence
-label_col: label
-num_labels: 20
-label_offset: 0
-
-# uv run  scripts/prepare_hf_dataset.py leannmlindsey/GUE --task fungi_species_20
