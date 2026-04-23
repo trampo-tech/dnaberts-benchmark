@@ -1,5 +1,0 @@
-train_csv: data/processed/train.csv
-val_csv: data/processed/val.csv
-test_csv: data/processed/test.csv
-text_col: sequence
-label_col: label

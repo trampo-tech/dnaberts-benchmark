@@ -32,6 +32,16 @@ dev = [
 [tool.taskipy.tasks]
 mlflow-ui = "mlflow ui --backend-store-uri file:./mlruns --host 127.0.0.1 --port 5000"
 
+#downloads all gue datasets
+download-gue = """
+TASKS="prom_core_all splice_reconstructed human_tf_0 mouse_0 EPI_K562 emp_H3K4me1 fungi_species_20 virus_covid"
+
+for task in $TASKS; do
+    echo "=== Downloading $task ==="
+    uv run python scripts/prepare_hf_dataset.py leannmlindsey/GUE --task "$task"
+done
+""" 
+
 [[tool.uv.index]]
 name = "pytorch-cu13"
 url = "https://download.pytorch.org/whl/cu13"

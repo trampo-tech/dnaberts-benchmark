@@ -1,5 +1,0 @@
-train_csv: data/processed/tataless_vs_background/train.csv
-val_csv: data/processed/tataless_vs_background/val.csv
-test_csv: data/processed/tataless_vs_background/test.csv
-text_col: sequence
-label_col: label
