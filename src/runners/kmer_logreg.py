@@ -22,6 +22,7 @@ from services.benchmark_logger import (
     append_leaderboard_row,
     build_run_id,
     get_git_commit,
+    resolve_experiment_name,
     save_run_summary,
     utc_timestamp,
 )
@@ -129,14 +130,15 @@ def run(cfg: DictConfig) -> None:
         print(f"  {key}: {v:.4f}")
 
     model_name = cfg.model.name
-    run_id = build_run_id(cfg.experiment_name, model_name)
+    experiment = resolve_experiment_name(cfg)
+    run_id = build_run_id(experiment, model_name)
 
     summary = {
         "timestamp": utc_timestamp(),
         "run_id": run_id,
         "status": "completed",
         "error": None,
-        "experiment": cfg.experiment_name,
+        "experiment": experiment,
         "model_name": model_name,
         "model_fallback": False,
         "model_fallback_reason": None,
@@ -156,7 +158,7 @@ def run(cfg: DictConfig) -> None:
     }
 
     _ = save_run_summary(
-        f"runs/{cfg.experiment_name}/{model_name}", summary
+        f"runs/{experiment}/{model_name}", summary
     )
     _ = append_leaderboard_row(cfg.train.leaderboard_csv, summary)
     print(f"\nAppended to {cfg.train.leaderboard_csv}")

@@ -1,8 +1,0 @@
-artifact_location: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/568340950445720901
-creation_time: 1776090765797
-experiment_id: '568340950445720901'
-last_update_time: 1776090765797
-lifecycle_stage: active
-name: promoter_binary
-trace_location: null
-workspace: default

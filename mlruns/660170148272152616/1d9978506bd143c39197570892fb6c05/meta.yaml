@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/660170148272152616/1d9978506bd143c39197570892fb6c05/artifacts
+end_time: 1776961693885
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 1d9978506bd143c39197570892fb6c05
+run_name: gue_mouse_0__zhihan1996_DNABERT-2-117M__20260423T162255Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776961375142
+status: 3
+tags: []
+user_id: azureuser

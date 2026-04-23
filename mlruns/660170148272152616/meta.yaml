@@ -1,0 +1,8 @@
+artifact_location: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/660170148272152616
+creation_time: 1776878179344
+experiment_id: '660170148272152616'
+last_update_time: 1776878179344
+lifecycle_stage: active
+name: gue
+trace_location: null
+workspace: default

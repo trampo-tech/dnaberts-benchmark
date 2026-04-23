@@ -1,1 +1,0 @@
-{'AutoConfig': 'configuration_bert.BertConfig', 'AutoModel': 'dnabert_layer.BertModel', 'AutoModelForMaskedLM': 'dnabert_layer.BertForMaskedLM', 'AutoModelForSequenceClassification': 'dnabert_layer.DNABertForSequenceClassification', 'AutoModelForPreTraining': 'dnabert_layer.BertForPreTraining'}

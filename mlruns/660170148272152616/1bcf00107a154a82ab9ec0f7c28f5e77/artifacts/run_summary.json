@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-04-23T13:26:48Z",
+  "run_id": "gue_fungi_species_20__zhihan1996_DNABERT-2-117M__20260423T125307Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "gue_fungi_species_20",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 6,
+  "train_bs": 16,
+  "eval_bs": 16,
+  "learning_rate": 3e-05,
+  "max_length": 512,
+  "git_commit": "cc70a4d",
+  "runtime_seconds": 2020.218028147,
+  "train": {
+    "train_runtime": 1986.2477,
+    "train_samples_per_second": 21.75,
+    "train_steps_per_second": 1.359,
+    "total_flos": 1.5120579723264e+16,
+    "train_loss": 1.0589262799863461,
+    "epoch": 6.0
+  },
+  "validation": {
+    "validation_loss": 0.9615015387535095,
+    "validation_accuracy": 0.71,
+    "validation_f1": 0.6867631723857466,
+    "validation_precision": 0.6878459885215921,
+    "validation_recall": 0.71,
+    "validation_roc_auc": 0.966367272170689,
+    "validation_runtime": 11.3708,
+    "validation_samples_per_second": 70.355,
+    "validation_steps_per_second": 4.397,
+    "epoch": 6.0
+  },
+  "test": {
+    "test_loss": 0.8628689646720886,
+    "test_accuracy": 0.742,
+    "test_f1": 0.7247087909964612,
+    "test_precision": 0.7313190816769305,
+    "test_recall": 0.742,
+    "test_roc_auc": 0.9731473684210526,
+    "test_runtime": 14.4892,
+    "test_samples_per_second": 69.017,
+    "test_steps_per_second": 4.348,
+    "epoch": 6.0
+  },
+  "output_dir": "runs/gue_fungi_species_20/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

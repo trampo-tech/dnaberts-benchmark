@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/660170148272152616/91aec68d313e479ebf64a3bcdf721ca9/artifacts
+end_time: 1776946060234
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 91aec68d313e479ebf64a3bcdf721ca9
+run_name: gue_fungi_species_20__zhihan1996_DNABERT-2-117M__20260423T120739Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1776946060224
+status: 3
+tags: []
+user_id: azureuser

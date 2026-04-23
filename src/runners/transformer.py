@@ -9,11 +9,11 @@ import time
 from typing import Any
 
 import evaluate
-import numpy as np
 import torch
 import torch.nn.functional as F
 from datasets import load_dataset
 from omegaconf import DictConfig
+from torch.optim import AdamW
 from transformers import (
     AutoTokenizer,
     DataCollatorWithPadding,
@@ -27,6 +27,7 @@ from services.benchmark_logger import (
     append_leaderboard_row,
     build_run_id,
     get_git_commit,
+    resolve_experiment_name,
     save_run_summary,
     utc_timestamp,
 )
@@ -89,11 +90,40 @@ class BenchmarkTrainer(Trainer):
         *args,
         label_mode: str = "class_index",
         label_num_classes: int | None = None,
+        head_learning_rate: float | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.label_mode = label_mode
         self.label_num_classes = label_num_classes
+        self.head_learning_rate = head_learning_rate
+
+    def create_optimizer(self):
+        if self.optimizer is not None:
+            return self.optimizer
+
+        if self.head_learning_rate is None:
+            return super().create_optimizer()
+
+        head_params = []
+        backbone_params = []
+        head_names = {"classifier", "cls", "score"}
+        for name, param in self.model.named_parameters():
+            if not param.requires_grad:
+                continue
+            if any(h in name for h in head_names):
+                head_params.append(param)
+            else:
+                backbone_params.append(param)
+
+        self.optimizer = AdamW(
+            [
+                {"params": backbone_params, "lr": self.args.learning_rate},
+                {"params": head_params, "lr": self.head_learning_rate},
+            ],
+            weight_decay=self.args.weight_decay,
+        )
+        return self.optimizer
 
     def compute_loss(
         self, model, inputs, return_outputs=False, num_items_in_batch=None
@@ -127,7 +157,12 @@ class BenchmarkTrainer(Trainer):
         )
 
 
-def run(cfg: DictConfig) -> None:
+# ---------------------------------------------------------------------------
+# Helpers – each one owns a single phase of the pipeline
+# ---------------------------------------------------------------------------
+
+
+def _setup_environment(cfg: DictConfig) -> str:
     if getattr(cfg.model, "disable_triton", False):
         _block_triton_imports()
 
@@ -135,7 +170,10 @@ def run(cfg: DictConfig) -> None:
     print(f"  Device: {'cuda' if torch.cuda.is_available() else 'cpu'} ({device_name})")
 
     _import_optional_modules(list(getattr(cfg.model, "import_modules", [])))
+    return device_name
 
+
+def _load_and_tokenize(cfg: DictConfig):
     ds = load_dataset(
         "csv",
         data_files={
@@ -148,18 +186,16 @@ def run(cfg: DictConfig) -> None:
     text_col = cfg.data.text_col
     label_col = cfg.data.label_col
     label_offset = int(getattr(cfg.data, "label_offset", 0))
-
-    num_labels = int(
-        getattr(cfg.data, "num_labels", None) or cfg.train.num_labels
-    )
+    num_labels = int(getattr(cfg.data, "num_labels", None) or cfg.train.num_labels)
 
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model.name, trust_remote_code=cfg.model.trust_remote_code
     )
+    max_length = int(getattr(cfg.data, "max_length", 0) or cfg.model.max_length)
 
     def tokenize(batch):
         seqs = [_preprocess_seq(x) for x in batch[text_col]]
-        out = tokenizer(seqs, truncation=True, max_length=cfg.model.max_length)
+        out = tokenizer(seqs, truncation=True, max_length=max_length)
         out["label"] = [int(x) - label_offset for x in batch[label_col]]
         return out
 
@@ -180,6 +216,10 @@ def run(cfg: DictConfig) -> None:
         drop = [c for c in tokenized[split].column_names if c not in keep_cols]
         tokenized[split] = tokenized[split].remove_columns(drop)
 
+    return tokenized, tokenizer, num_labels, max_length
+
+
+def _load_and_configure_model(cfg: DictConfig, num_labels: int):
     model, model_load_info = load_model_for_sequence_classification(
         cfg.model.name,
         num_labels=num_labels,
@@ -193,12 +233,9 @@ def run(cfg: DictConfig) -> None:
         )
 
     model_config: Any = getattr(model, "config", None)
-
     if model_config is not None:
         model_config.num_labels = num_labels
-        model_config.id2label = {
-            i: f"LABEL_{i}" for i in range(num_labels)
-        }
+        model_config.id2label = {i: f"LABEL_{i}" for i in range(num_labels)}
         model_config.label2id = {
             label: idx for idx, label in model_config.id2label.items()
         }
@@ -207,6 +244,10 @@ def run(cfg: DictConfig) -> None:
     if configured_problem_type is not None and model_config is not None:
         model_config.problem_type = str(configured_problem_type)
 
+    return model, model_load_info, label_mode
+
+
+def _build_metrics_fn(num_labels: int):
     acc_metric = evaluate.load("accuracy")
     f1_metric = evaluate.load("f1")
     prec_metric = evaluate.load("precision")
@@ -219,20 +260,26 @@ def run(cfg: DictConfig) -> None:
             num_labels=num_labels,
         )
 
-    outdir = os.path.join(
-        cfg.train.output_root, cfg.experiment_name, cfg.model.name.replace("/", "_")
-    )
-    run_id = build_run_id(cfg.experiment_name, cfg.model.name)
+    return compute_metrics
 
-    training_args_kwargs: dict[str, Any] = {
+
+def _build_training_args(
+    cfg: DictConfig,
+    outdir: str,
+    run_id: str,
+    train_bs: int,
+    eval_bs: int,
+    epochs: int,
+) -> TrainingArguments:
+    kwargs: dict[str, Any] = {
         "output_dir": outdir,
         "eval_strategy": cfg.train.eval_strategy,
         "save_strategy": cfg.train.save_strategy,
         "logging_steps": cfg.train.logging_steps,
         "learning_rate": cfg.train.learning_rate,
-        "per_device_train_batch_size": cfg.train.train_bs,
-        "per_device_eval_batch_size": cfg.train.eval_bs,
-        "num_train_epochs": cfg.train.epochs,
+        "per_device_train_batch_size": train_bs,
+        "per_device_eval_batch_size": eval_bs,
+        "num_train_epochs": epochs,
         "weight_decay": cfg.train.weight_decay,
         "load_best_model_at_end": True,
         "metric_for_best_model": cfg.train.metric_for_best_model,
@@ -243,21 +290,37 @@ def run(cfg: DictConfig) -> None:
         "run_name": run_id,
     }
 
+    warmup_ratio = float(getattr(cfg.train, "warmup_ratio", 0) or 0)
+    if warmup_ratio > 0:
+        kwargs["warmup_ratio"] = warmup_ratio
+
     if str(cfg.train.eval_strategy) == "steps" and getattr(cfg.train, "eval_steps", None):
-        training_args_kwargs["eval_steps"] = int(cfg.train.eval_steps)
+        kwargs["eval_steps"] = int(cfg.train.eval_steps)
 
     if str(cfg.train.save_strategy) == "steps" and getattr(cfg.train, "save_steps", None):
-        training_args_kwargs["save_steps"] = int(cfg.train.save_steps)
+        kwargs["save_steps"] = int(cfg.train.save_steps)
 
     if getattr(cfg.train, "save_total_limit", None) is not None:
-        training_args_kwargs["save_total_limit"] = int(cfg.train.save_total_limit)
+        kwargs["save_total_limit"] = int(cfg.train.save_total_limit)
 
-    args = TrainingArguments(**training_args_kwargs)
+    return TrainingArguments(**kwargs)
 
-    trainer_callbacks = []
+
+def _build_trainer(
+    cfg: DictConfig,
+    model,
+    tokenizer,
+    tokenized,
+    training_args: TrainingArguments,
+    compute_metrics,
+    label_mode: str,
+    num_labels: int,
+    head_lr: float | None,
+) -> BenchmarkTrainer:
+    callbacks = []
     early_stopping_patience = int(getattr(cfg.train, "early_stopping_patience", 0) or 0)
     if early_stopping_patience > 0:
-        trainer_callbacks.append(
+        callbacks.append(
             EarlyStoppingCallback(
                 early_stopping_patience=early_stopping_patience,
                 early_stopping_threshold=float(
@@ -266,62 +329,133 @@ def run(cfg: DictConfig) -> None:
             )
         )
 
-    trainer = BenchmarkTrainer(
+    return BenchmarkTrainer(
         model=model,
-        args=args,
+        args=training_args,
         train_dataset=tokenized["train"],
         eval_dataset=tokenized["validation"],
         data_collator=DataCollatorWithPadding(tokenizer=tokenizer),
         compute_metrics=compute_metrics,
-        callbacks=trainer_callbacks,
+        callbacks=callbacks,
         label_mode=label_mode,
         label_num_classes=num_labels,
+        head_learning_rate=head_lr,
     )
 
-    mlflow_client = None
-    enable_mlflow = bool(getattr(cfg.train, "enable_mlflow", False))
-    if enable_mlflow:
-        try:
-            import mlflow
-        except ImportError as exc:
-            message = (
-                "MLflow could not be imported. This is often caused by incompatible dependencies. "
-                f"Original error: {exc}"
-            )
-            raise RuntimeError(message) from exc
-        else:
-            mlflow_tracking_uri = getattr(
-                cfg.train,
-                "mlflow_tracking_uri",
-                f"file:{os.path.abspath(os.path.join(os.getcwd(), 'mlruns'))}",
-            )
-            mlflow_experiment = getattr(
-                cfg.train,
-                "mlflow_experiment",
-                cfg.experiment_name,
-            )
-            mlflow_client = mlflow
-            mlflow_client.set_tracking_uri(mlflow_tracking_uri)
-            mlflow_client.set_experiment(mlflow_experiment)
-            mlflow_client.start_run(run_name=run_id)
-            mlflow_client.log_params(
-                {
-                    "run_id": run_id,
-                    "experiment": cfg.experiment_name,
-                    "model_name": cfg.model.name,
-                    "max_length": cfg.model.max_length,
-                    "num_labels": cfg.train.num_labels,
-                    "learning_rate": cfg.train.learning_rate,
-                    "epochs": cfg.train.epochs,
-                    "train_bs": cfg.train.train_bs,
-                    "eval_bs": cfg.train.eval_bs,
-                    "weight_decay": cfg.train.weight_decay,
-                    "seed": cfg.seed,
-                    "fallback_model_wrapper": model_load_info.used_fallback,
-                    "device": device_name,
-                }
-            )
 
+def _setup_mlflow(
+    cfg: DictConfig,
+    run_id: str,
+    mlflow_params: dict[str, Any],
+):
+    if not bool(getattr(cfg.train, "enable_mlflow", False)):
+        return None
+
+    try:
+        import mlflow
+    except ImportError as exc:
+        message = (
+            "MLflow could not be imported. This is often caused by incompatible dependencies. "
+            f"Original error: {exc}"
+        )
+        raise RuntimeError(message) from exc
+
+    mlflow_tracking_uri = getattr(
+        cfg.train,
+        "mlflow_tracking_uri",
+        f"file:{os.path.abspath(os.path.join(os.getcwd(), 'mlruns'))}",
+    )
+    mlflow_experiment = getattr(
+        cfg.train,
+        "mlflow_experiment",
+        cfg.experiment_name,
+    )
+    mlflow.set_tracking_uri(mlflow_tracking_uri)
+    mlflow.set_experiment(mlflow_experiment)
+    os.environ["MLFLOW_FLATTEN_PARAMS"] = "1"
+    mlflow.start_run(run_name=run_id)
+    try:
+        mlflow.log_params(mlflow_params)
+    except mlflow.exceptions.MlflowException:
+        pass  # HF Trainer may have already logged some params
+
+    return mlflow
+
+
+def _finalize_mlflow(mlflow_client, summary: dict, status: str, runtime_seconds: float,
+                     train_metrics: dict, validation_metrics: dict, test_metrics: dict) -> None:
+    if mlflow_client is None:
+        return
+    all_metrics = {
+        **numeric_metrics(train_metrics),
+        **numeric_metrics(validation_metrics),
+        **numeric_metrics(test_metrics),
+        "runtime_seconds": runtime_seconds,
+    }
+    if all_metrics:
+        mlflow_client.log_metrics(all_metrics)
+    mlflow_client.log_dict(summary, "run_summary.json")
+    mlflow_client.end_run(
+        status="FINISHED" if status == "completed" else "FAILED"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
+
+
+def run(cfg: DictConfig) -> None:
+    # -- Environment ----------------------------------------------------------
+    device_name = _setup_environment(cfg)
+
+    # -- Data -----------------------------------------------------------------
+    tokenized, tokenizer, num_labels, max_length = _load_and_tokenize(cfg)
+
+    # -- Model ----------------------------------------------------------------
+    model, model_load_info, label_mode = _load_and_configure_model(cfg, num_labels)
+
+    # -- Metrics & output paths -----------------------------------------------
+    compute_metrics = _build_metrics_fn(num_labels)
+    experiment = resolve_experiment_name(cfg)
+    outdir = os.path.join(
+        cfg.train.output_root, experiment, cfg.model.name.replace("/", "_")
+    )
+    run_id = build_run_id(experiment, cfg.model.name)
+
+    # -- Training setup -------------------------------------------------------
+    train_bs = int(getattr(cfg.data, "train_bs", 0) or cfg.train.train_bs)
+    eval_bs = int(getattr(cfg.data, "eval_bs", 0) or cfg.train.eval_bs)
+    epochs = int(getattr(cfg.data, "epochs", 0) or cfg.train.epochs)
+    head_lr = float(getattr(cfg.train, "head_learning_rate", 0) or 0) or None
+    warmup_ratio = float(getattr(cfg.train, "warmup_ratio", 0) or 0)
+
+    training_args = _build_training_args(cfg, outdir, run_id, train_bs, eval_bs, epochs)
+    trainer = _build_trainer(
+        cfg, model, tokenizer, tokenized, training_args,
+        compute_metrics, label_mode, num_labels, head_lr,
+    )
+
+    # -- MLflow ---------------------------------------------------------------
+    mlflow_client = _setup_mlflow(cfg, run_id, {
+        "run_id": run_id,
+        "experiment": experiment,
+        "model_name": cfg.model.name,
+        "model_max_length": max_length,
+        "num_labels": num_labels,
+        "learning_rate": cfg.train.learning_rate,
+        "head_learning_rate": head_lr,
+        "epochs": epochs,
+        "train_bs": train_bs,
+        "eval_bs": eval_bs,
+        "weight_decay": cfg.train.weight_decay,
+        "warmup_ratio": warmup_ratio,
+        "seed": cfg.seed,
+        "fallback_model_wrapper": model_load_info.used_fallback,
+        "device": device_name,
+    })
+
+    # -- Train & evaluate -----------------------------------------------------
     started = time.perf_counter()
     status = "failed"
     error_message = None
@@ -356,16 +490,16 @@ def run(cfg: DictConfig) -> None:
             "run_id": run_id,
             "status": status,
             "error": error_message,
-            "experiment": cfg.experiment_name,
+            "experiment": experiment,
             "model_name": cfg.model.name,
             "model_fallback": model_load_info.used_fallback,
             "model_fallback_reason": model_load_info.fallback_reason,
             "seed": cfg.seed,
-            "epochs": cfg.train.epochs,
-            "train_bs": cfg.train.train_bs,
-            "eval_bs": cfg.train.eval_bs,
+            "epochs": epochs,
+            "train_bs": train_bs,
+            "eval_bs": eval_bs,
             "learning_rate": cfg.train.learning_rate,
-            "max_length": cfg.model.max_length,
+            "max_length": max_length,
             "git_commit": get_git_commit(),
             "runtime_seconds": runtime_seconds,
             "train": train_metrics,
@@ -377,17 +511,7 @@ def run(cfg: DictConfig) -> None:
 
         _ = save_run_summary(outdir, summary)
         _ = append_leaderboard_row(cfg.train.leaderboard_csv, summary)
-
-        if mlflow_client is not None:
-            all_metrics = {
-                **numeric_metrics(train_metrics),
-                **numeric_metrics(validation_metrics),
-                **numeric_metrics(test_metrics),
-                "runtime_seconds": runtime_seconds,
-            }
-            if all_metrics:
-                mlflow_client.log_metrics(all_metrics)
-            mlflow_client.log_dict(summary, "run_summary.json")
-            mlflow_client.end_run(
-                status="FINISHED" if status == "completed" else "FAILED"
-            )
+        _finalize_mlflow(
+            mlflow_client, summary, status, runtime_seconds,
+            train_metrics, validation_metrics, test_metrics,
+        )
