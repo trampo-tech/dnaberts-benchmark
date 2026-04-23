@@ -48,9 +48,17 @@ def compute_metrics_from_logits(
     }
 
     unique_labels = np.unique(labels)
-    if len(unique_labels) > 1 and (logits.ndim == 1 or logits.shape[-1] <= 2):
-        probs = positive_class_probability(np.asarray(logits))
-        metrics["roc_auc"] = float(roc_auc_score(labels, probs))
+    if len(unique_labels) > 1:
+        if logits.ndim == 1 or logits.shape[-1] <= 2:
+            probs = positive_class_probability(np.asarray(logits))
+            metrics["roc_auc"] = float(roc_auc_score(labels, probs))
+        else:
+            shifted = logits - np.max(logits, axis=-1, keepdims=True)
+            exp_logits = np.exp(shifted)
+            probs = exp_logits / np.sum(exp_logits, axis=-1, keepdims=True)
+            metrics["roc_auc"] = float(
+                roc_auc_score(labels, probs, multi_class="ovr", average="weighted")
+            )
     else:
         metrics["roc_auc"] = 0.0
 

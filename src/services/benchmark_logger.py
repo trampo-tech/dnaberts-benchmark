@@ -10,6 +10,13 @@ def utc_timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def resolve_experiment_name(cfg) -> str:
+    name = str(cfg.experiment_name)
+    if name == "gue" and getattr(getattr(cfg, "data", None), "task", None):
+        return f"gue_{cfg.data.task}"
+    return name
+
+
 def build_run_id(experiment_name: str, model_name: str) -> str:
     model_alias = model_name.replace("/", "_")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")

@@ -1,3 +1,4 @@
+import importlib
 import random
 
 import hydra
@@ -34,7 +35,6 @@ def main(cfg: DictConfig):
             f"Unknown model.type={model_type!r}. Choose from: {list(RUNNERS)}"
         )
 
-    import importlib
 
     runner = importlib.import_module(RUNNERS[model_type])
     runner.run(cfg)
