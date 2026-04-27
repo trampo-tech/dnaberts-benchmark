@@ -28,10 +28,11 @@ tasks:
     epochs: 10
   EPI_K562:               # 3000bp, binary, 14k samples — long range
     num_labels: 2
-    max_length: 512
-    train_bs: 8
-    eval_bs: 16
+    max_length: 3000
+    train_bs: 4
+    eval_bs: 4
     epochs: 5
+    eval_steps: 1000
   emp_H3K4me1:            # 500bp, binary, 31k samples
     num_labels: 2
     max_length: 512
@@ -46,9 +47,9 @@ tasks:
     epochs: 10
   virus_covid:            # 999bp, 9-class, 91k samples — largest dataset
     num_labels: 9
-    max_length: 512
-    train_bs: 16
-    eval_bs: 32
+    max_length: 1000
+    train_bs: 8
+    eval_bs: 16
     epochs: 3
 
 # ── resolved from task registry ──────────────────────────────
