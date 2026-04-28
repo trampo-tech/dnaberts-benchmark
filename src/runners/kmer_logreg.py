@@ -13,6 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
+    matthews_corrcoef,
     precision_score,
     recall_score,
     roc_auc_score,
@@ -76,6 +77,7 @@ def _evaluate_split(
     return {
         f"{prefix}_accuracy": accuracy_score(y, preds),
         f"{prefix}_f1": f1_score(y, preds, average=average, zero_division=0),
+        f"{prefix}_mcc": matthews_corrcoef(y, preds),
         f"{prefix}_precision": precision_score(
             y, preds, average=average, zero_division=0
         ),

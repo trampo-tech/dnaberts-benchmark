@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import numpy as np
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import matthews_corrcoef, roc_auc_score
 
 
 def positive_class_probability(logits: np.ndarray) -> np.ndarray:
@@ -45,6 +45,7 @@ def compute_metrics_from_logits(
         "f1": f1_metric.compute(predictions=preds, references=labels, average=avg)["f1"],
         "precision": prec_metric.compute(predictions=preds, references=labels, average=avg)["precision"],
         "recall": rec_metric.compute(predictions=preds, references=labels, average=avg)["recall"],
+        "mcc": float(matthews_corrcoef(labels, preds)),
     }
 
     unique_labels = np.unique(labels)

@@ -221,11 +221,15 @@ def _load_and_tokenize(cfg: DictConfig):
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model.name, trust_remote_code=cfg.model.trust_remote_code
     )
-    max_length = int(getattr(cfg.data, "max_length", 0) or cfg.model.max_length)
+    token_max_length = int(
+        getattr(cfg.data, "token_max_length", 0)
+        or getattr(cfg.data, "max_length", 0)
+        or cfg.model.max_length
+    )
 
     def tokenize(batch):
         seqs = [_preprocess_seq(x) for x in batch[text_col]]
-        out = tokenizer(seqs, truncation=True, max_length=max_length)
+        out = tokenizer(seqs, truncation=True, max_length=token_max_length)
         out["label"] = [int(x) - label_offset for x in batch[label_col]]
         return out
 
@@ -246,7 +250,7 @@ def _load_and_tokenize(cfg: DictConfig):
         drop = [c for c in tokenized[split].column_names if c not in keep_cols]
         tokenized[split] = tokenized[split].remove_columns(drop)
 
-    return tokenized, tokenizer, num_labels, max_length
+    return tokenized, tokenizer, num_labels, token_max_length
 
 
 def _load_and_configure_model(cfg: DictConfig, num_labels: int):
@@ -323,9 +327,13 @@ def _build_training_args(
         "run_name": run_id,
     }
 
-    warmup_ratio = float(getattr(cfg.train, "warmup_ratio", 0) or 0)
-    if warmup_ratio > 0:
-        kwargs["warmup_ratio"] = warmup_ratio
+    warmup_steps = getattr(cfg.train, "warmup_steps", None)
+    if warmup_steps is not None:
+        kwargs["warmup_steps"] = int(warmup_steps)
+    else:
+        warmup_ratio = float(getattr(cfg.train, "warmup_ratio", 0) or 0)
+        if warmup_ratio > 0:
+            kwargs["warmup_ratio"] = warmup_ratio
 
     if str(cfg.train.eval_strategy) == "steps" and getattr(cfg.train, "eval_steps", None):
         kwargs["eval_steps"] = int(cfg.train.eval_steps)
@@ -335,6 +343,9 @@ def _build_training_args(
 
     if getattr(cfg.train, "save_total_limit", None) is not None:
         kwargs["save_total_limit"] = int(cfg.train.save_total_limit)
+
+    if getattr(cfg.train, "eval_accumulation_steps", None) is not None:
+        kwargs["eval_accumulation_steps"] = int(cfg.train.eval_accumulation_steps)
 
     return TrainingArguments(**kwargs)
 
@@ -443,7 +454,7 @@ def run(cfg: DictConfig) -> None:
     device_name = _setup_environment(cfg)
 
     # -- Data -----------------------------------------------------------------
-    tokenized, tokenizer, num_labels, max_length = _load_and_tokenize(cfg)
+    tokenized, tokenizer, num_labels, token_max_length = _load_and_tokenize(cfg)
 
     # -- Model ----------------------------------------------------------------
     model, model_load_info, label_mode = _load_and_configure_model(cfg, num_labels)
@@ -461,7 +472,7 @@ def run(cfg: DictConfig) -> None:
     eval_bs = int(getattr(cfg.data, "eval_bs", 0) or cfg.train.eval_bs)
     epochs = int(getattr(cfg.data, "epochs", 0) or cfg.train.epochs)
     head_lr = float(getattr(cfg.train, "head_learning_rate", 0) or 0) or None
-    warmup_ratio = float(getattr(cfg.train, "warmup_ratio", 0) or 0)
+    warmup_steps = getattr(cfg.train, "warmup_steps", None)
 
     training_args = _build_training_args(cfg, outdir, run_id, train_bs, eval_bs, epochs)
     trainer = _build_trainer(
@@ -474,7 +485,7 @@ def run(cfg: DictConfig) -> None:
         "run_id": run_id,
         "experiment": experiment,
         "model_name": cfg.model.name,
-        "model_max_length": max_length,
+        "token_max_length": token_max_length,
         "num_labels": num_labels,
         "learning_rate": cfg.train.learning_rate,
         "head_learning_rate": head_lr,
@@ -482,7 +493,7 @@ def run(cfg: DictConfig) -> None:
         "train_bs": train_bs,
         "eval_bs": eval_bs,
         "weight_decay": cfg.train.weight_decay,
-        "warmup_ratio": warmup_ratio,
+        "warmup_steps": (int(warmup_steps) if warmup_steps is not None else None),
         "seed": cfg.seed,
         "fallback_model_wrapper": model_load_info.used_fallback,
         "device": device_name,
@@ -532,7 +543,8 @@ def run(cfg: DictConfig) -> None:
             "train_bs": train_bs,
             "eval_bs": eval_bs,
             "learning_rate": cfg.train.learning_rate,
-            "max_length": max_length,
+            "token_max_length": token_max_length,
+            "max_length": token_max_length,
             "git_commit": get_git_commit(),
             "runtime_seconds": runtime_seconds,
             "train": train_metrics,
