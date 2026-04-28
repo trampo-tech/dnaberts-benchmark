@@ -4,57 +4,57 @@ task: ???  # REQUIRED — e.g. splice_reconstructed, virus_covid, fungi_species_
 tasks:
   prom_core_all:          # 70bp, binary, 59k samples
     num_labels: 2
-    max_length: 128
+    token_max_length: 20
     train_bs: 32
     eval_bs: 64
-    epochs: 5
+    epochs: 4
   splice_reconstructed:   # 400bp, 3-class, 45k samples
     num_labels: 3
-    max_length: 512
-    train_bs: 16
+    token_max_length: 80
+    train_bs: 32
     eval_bs: 32
     epochs: 5
   human_tf_0:             # 101bp, binary, 34k samples
     num_labels: 2
-    max_length: 128
+    token_max_length: 30
     train_bs: 32
     eval_bs: 64
     epochs: 3
   mouse_0:                # 101bp, binary, 8k samples — small dataset
     num_labels: 2
-    max_length: 128
-    train_bs: 16
+    token_max_length: 30
+    train_bs: 32
     eval_bs: 32
     epochs: 10
   EPI_K562:               # 3000bp, binary, 14k samples — long range
     num_labels: 2
-    max_length: 3000
+    token_max_length: 768
     train_bs: 4
     eval_bs: 4
     epochs: 5
     eval_steps: 1000
   emp_H3K4me1:            # 500bp, binary, 31k samples
     num_labels: 2
-    max_length: 512
+    token_max_length: 128
     train_bs: 16
     eval_bs: 32
     epochs: 5
   fungi_species_20:       # 10000bp, 20-class, 10k samples
     num_labels: 20
-    max_length: 512
+    token_max_length: 2048
     train_bs: 8
     eval_bs: 16
     epochs: 10
   virus_covid:            # 999bp, 9-class, 91k samples — largest dataset
-    num_labels: 9
-    max_length: 1000
+    num_labels: 8
+    token_max_length: 256
     train_bs: 8
     eval_bs: 16
     epochs: 3
 
 # ── resolved from task registry ──────────────────────────────
 num_labels: ${data.tasks.${data.task}.num_labels}
-max_length: ${data.tasks.${data.task}.max_length}
+token_max_length: ${data.tasks.${data.task}.token_max_length}
 train_bs: ${data.tasks.${data.task}.train_bs}
 eval_bs: ${data.tasks.${data.task}.eval_bs}
 epochs: ${data.tasks.${data.task}.epochs}
