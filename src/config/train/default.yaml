@@ -2,7 +2,7 @@ output_root: runs
 leaderboard_csv: ${hydra:runtime.cwd}/reports/benchmark_results.csv
 learning_rate: 3e-5
 head_learning_rate: null 
-warmup_ratio: 0.1
+warmup_steps: 50 #following dnabert2 paper
 epochs: 3
 train_bs: 16 # bs = batch_size
 eval_bs: 16
@@ -13,6 +13,7 @@ save_total_limit: 1
 logging_steps: 20
 eval_steps: 250
 save_steps: 250
+eval_accumulation_steps: 50
 metric_for_best_model: f1
 early_stopping_patience: 5
 early_stopping_threshold: 0.0
