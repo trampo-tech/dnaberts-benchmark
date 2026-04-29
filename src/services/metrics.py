@@ -34,17 +34,17 @@ def compute_metrics_from_logits(
     prec_metric,
     rec_metric,
     num_labels: int = 2,
+    average: str = "macro",
 ) -> dict[str, float]:
     if isinstance(logits, tuple):
         logits = logits[0]
     preds = np.argmax(logits, axis=-1)
 
-    avg = "binary" if num_labels <= 2 else "weighted"
     metrics = {
         "accuracy": acc_metric.compute(predictions=preds, references=labels)["accuracy"],
-        "f1": f1_metric.compute(predictions=preds, references=labels, average=avg)["f1"],
-        "precision": prec_metric.compute(predictions=preds, references=labels, average=avg)["precision"],
-        "recall": rec_metric.compute(predictions=preds, references=labels, average=avg)["recall"],
+        "f1": f1_metric.compute(predictions=preds, references=labels, average=average)["f1"],
+        "precision": prec_metric.compute(predictions=preds, references=labels, average=average)["precision"],
+        "recall": rec_metric.compute(predictions=preds, references=labels, average=average)["recall"],
         "mcc": float(matthews_corrcoef(labels, preds)),
     }
 

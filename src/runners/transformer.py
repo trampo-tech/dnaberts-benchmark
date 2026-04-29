@@ -137,7 +137,7 @@ class BenchmarkTrainer(Trainer):
 
         head_params = []
         backbone_params = []
-        head_names = {"classifier", "cls", "score"}
+        head_names = {"classifier", "cls", "score", "pooler"}
         for name, param in self.model.named_parameters():
             if not param.requires_grad:
                 continue
@@ -282,9 +282,23 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int):
         model_config.problem_type = str(configured_problem_type)
 
     return model, model_load_info, label_mode
+def _resolve_train_override(cfg: DictConfig, key: str, default: Any = None) -> Any:
+    direct_value = getattr(cfg.data, key, None)
+    if direct_value is not None:
+        return direct_value
+
+    task_name = getattr(cfg.data, "task", None)
+    task_registry = getattr(cfg.data, "tasks", None)
+    if task_name and task_registry is not None and task_name in task_registry:
+        task_cfg = task_registry[task_name]
+        nested_value = getattr(task_cfg, key, None)
+        if nested_value is not None:
+            return nested_value
+
+    return getattr(cfg.train, key, default)
 
 
-def _build_metrics_fn(num_labels: int):
+def _build_metrics_fn(num_labels: int, average: str):
     acc_metric = evaluate.load("accuracy")
     f1_metric = evaluate.load("f1")
     prec_metric = evaluate.load("precision")
@@ -295,6 +309,7 @@ def _build_metrics_fn(num_labels: int):
         return compute_metrics_from_logits(
             logits, labels, acc_metric, f1_metric, prec_metric, rec_metric,
             num_labels=num_labels,
+            average=average,
         )
 
     return compute_metrics
@@ -340,6 +355,11 @@ def _build_training_args(
 
     if str(cfg.train.save_strategy) == "steps" and getattr(cfg.train, "save_steps", None):
         kwargs["save_steps"] = int(cfg.train.save_steps)
+
+    if getattr(cfg.train, "gradient_accumulation_steps", None) is not None:
+        kwargs["gradient_accumulation_steps"] = int(
+            cfg.train.gradient_accumulation_steps
+        )
 
     if getattr(cfg.train, "save_total_limit", None) is not None:
         kwargs["save_total_limit"] = int(cfg.train.save_total_limit)
@@ -460,7 +480,8 @@ def run(cfg: DictConfig) -> None:
     model, model_load_info, label_mode = _load_and_configure_model(cfg, num_labels)
 
     # -- Metrics & output paths -----------------------------------------------
-    compute_metrics = _build_metrics_fn(num_labels)
+    metric_average = str(_resolve_train_override(cfg, "metric_average", "macro"))
+    compute_metrics = _build_metrics_fn(num_labels, metric_average)
     experiment = resolve_experiment_name(cfg)
     outdir = os.path.join(
         cfg.train.output_root, experiment, cfg.model.name.replace("/", "_")
@@ -468,11 +489,27 @@ def run(cfg: DictConfig) -> None:
     run_id = build_run_id(experiment, cfg.model.name)
 
     # -- Training setup -------------------------------------------------------
-    train_bs = int(getattr(cfg.data, "train_bs", 0) or cfg.train.train_bs)
-    eval_bs = int(getattr(cfg.data, "eval_bs", 0) or cfg.train.eval_bs)
-    epochs = int(getattr(cfg.data, "epochs", 0) or cfg.train.epochs)
-    head_lr = float(getattr(cfg.train, "head_learning_rate", 0) or 0) or None
-    warmup_steps = getattr(cfg.train, "warmup_steps", None)
+    train_bs = int(_resolve_train_override(cfg, "train_bs", cfg.train.train_bs))
+    eval_bs = int(_resolve_train_override(cfg, "eval_bs", cfg.train.eval_bs))
+    epochs = int(_resolve_train_override(cfg, "epochs", cfg.train.epochs))
+    head_lr = float(_resolve_train_override(cfg, "head_learning_rate", 0) or 0) or None
+    warmup_steps = _resolve_train_override(cfg, "warmup_steps", None)
+
+    eval_steps = _resolve_train_override(cfg, "eval_steps", None)
+    if eval_steps is not None:
+        cfg.train.eval_steps = int(eval_steps)
+
+    save_steps = _resolve_train_override(cfg, "save_steps", None)
+    if save_steps is not None:
+        cfg.train.save_steps = int(save_steps)
+
+    gradient_accumulation_steps = _resolve_train_override(
+        cfg, "gradient_accumulation_steps", 1
+    )
+    cfg.train.gradient_accumulation_steps = int(gradient_accumulation_steps)
+
+    if warmup_steps is not None:
+        cfg.train.warmup_steps = int(warmup_steps)
 
     training_args = _build_training_args(cfg, outdir, run_id, train_bs, eval_bs, epochs)
     trainer = _build_trainer(
@@ -492,8 +529,10 @@ def run(cfg: DictConfig) -> None:
         "epochs": epochs,
         "train_bs": train_bs,
         "eval_bs": eval_bs,
+        "gradient_accumulation_steps": gradient_accumulation_steps,
         "weight_decay": cfg.train.weight_decay,
         "warmup_steps": (int(warmup_steps) if warmup_steps is not None else None),
+        "metric_average": metric_average,
         "seed": cfg.seed,
         "fallback_model_wrapper": model_load_info.used_fallback,
         "device": device_name,
@@ -542,7 +581,9 @@ def run(cfg: DictConfig) -> None:
             "epochs": epochs,
             "train_bs": train_bs,
             "eval_bs": eval_bs,
+            "gradient_accumulation_steps": gradient_accumulation_steps,
             "learning_rate": cfg.train.learning_rate,
+            "metric_average": metric_average,
             "token_max_length": token_max_length,
             "max_length": token_max_length,
             "git_commit": get_git_commit(),

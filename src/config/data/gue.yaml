@@ -45,12 +45,14 @@ tasks:
     train_bs: 8
     eval_bs: 16
     epochs: 10
+    head_learning_rate: 3e-4 
   virus_covid:            # 999bp, 9-class, 91k samples — largest dataset
-    num_labels: 8
+    num_labels: 9
     token_max_length: 256
-    train_bs: 8
-    eval_bs: 16
-    epochs: 3
+    train_bs: 32
+    eval_bs: 32
+    epochs: 5
+    head_learning_rate: 3e-4  
 
 # ── resolved from task registry ──────────────────────────────
 num_labels: ${data.tasks.${data.task}.num_labels}
