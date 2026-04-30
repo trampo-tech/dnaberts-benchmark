@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-04-27T12:58:43Z",
+  "run_id": "gue_virus_covid__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260427T121949Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "gue_virus_covid",
+  "model_name": "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 8,
+  "eval_bs": 16,
+  "learning_rate": 3e-05,
+  "max_length": 512,
+  "git_commit": "bdda59a",
+  "runtime_seconds": 2332.492624148,
+  "train": {
+    "train_runtime": 2081.2903,
+    "train_samples_per_second": 95.135,
+    "train_steps_per_second": 11.893,
+    "total_flos": 8005986359271840.0,
+    "train_loss": 2.1957884521484377,
+    "epoch": 0.24239486122894194
+  },
+  "validation": {
+    "validation_loss": 2.193511486053467,
+    "validation_accuracy": 0.12394327788382874,
+    "validation_f1": 0.032581457444342835,
+    "validation_precision": 0.03987138620035344,
+    "validation_recall": 0.12394327788382874,
+    "validation_roc_auc": 0.5206384541086398,
+    "validation_runtime": 109.0206,
+    "validation_samples_per_second": 67.272,
+    "validation_steps_per_second": 4.21,
+    "epoch": 0.24239486122894194
+  },
+  "test": {
+    "test_loss": 2.19826078414917,
+    "test_accuracy": 0.11900087260034904,
+    "test_f1": 0.029757762519481583,
+    "test_precision": 0.03330806230683624,
+    "test_recall": 0.11900087260034904,
+    "test_roc_auc": 0.516162854733529,
+    "test_runtime": 139.5668,
+    "test_samples_per_second": 65.689,
+    "test_steps_per_second": 4.106,
+    "epoch": 0.24239486122894194
+  },
+  "output_dir": "runs/gue_virus_covid/InstaDeepAI_nucleotide-transformer-v2-500m-multi-species",
+  "device": "Tesla T4"
+}

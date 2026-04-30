@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-04-28T15:42:52Z",
+  "run_id": "gue_virus_covid__zhihan1996_DNABERT-2-117M__20260428T152504Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "gue_virus_covid",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 16,
+  "eval_bs": 16,
+  "learning_rate": 3e-05,
+  "max_length": 1000,
+  "git_commit": "a370f5c",
+  "runtime_seconds": 1068.1147761739994,
+  "train": {
+    "train_runtime": 971.1414,
+    "train_samples_per_second": 203.887,
+    "train_steps_per_second": 12.746,
+    "total_flos": 4605123712517280.0,
+    "train_loss": 2.1864688110351564,
+    "epoch": 0.4847309743092584
+  },
+  "validation": {
+    "validation_loss": 2.1708760261535645,
+    "validation_accuracy": 0.14125988546495774,
+    "validation_f1": 0.10359124682886511,
+    "validation_precision": 0.11973316874158223,
+    "validation_recall": 0.14125988546495774,
+    "validation_roc_auc": 0.5313491976501328,
+    "validation_runtime": 41.0454,
+    "validation_samples_per_second": 178.68,
+    "validation_steps_per_second": 11.183,
+    "epoch": 0.4847309743092584
+  },
+  "test": {
+    "test_loss": 2.174226999282837,
+    "test_accuracy": 0.1431064572425829,
+    "test_f1": 0.10633255190831327,
+    "test_precision": 0.12532791348681926,
+    "test_recall": 0.1431064572425829,
+    "test_roc_auc": 0.5334447544537929,
+    "test_runtime": 54.5597,
+    "test_samples_per_second": 168.036,
+    "test_steps_per_second": 10.502,
+    "epoch": 0.4847309743092584
+  },
+  "output_dir": "runs/gue_virus_covid/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

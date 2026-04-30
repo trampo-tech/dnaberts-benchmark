@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/660170148272152616/b85e7b29ad2e46caa70b04e3210ff48c/artifacts
+end_time: 1777386902515
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: b85e7b29ad2e46caa70b04e3210ff48c
+run_name: gue_virus_covid__zhihan1996_DNABERT-2-117M__20260428T143434Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777386875541
+status: 4
+tags: []
+user_id: azureuser

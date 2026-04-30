@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-04-28T13:31:54Z",
+  "run_id": "gue_EPI_K562__zhihan1996_DNABERT-2-117M__20260428T124653Z",
+  "status": "failed",
+  "error": "CUDA out of memory. Tried to allocate 6.55 GiB. GPU 0 has a total capacity of 15.57 GiB of which 6.55 GiB is free. Including non-PyTorch memory, this process has 9.02 GiB memory in use. Of the allocated memory 7.94 GiB is allocated by PyTorch, and 971.93 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)",
+  "experiment": "gue_EPI_K562",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 5,
+  "train_bs": 8,
+  "eval_bs": 8,
+  "learning_rate": 3e-05,
+  "max_length": 3000,
+  "git_commit": "a370f5c",
+  "runtime_seconds": 2699.336844325,
+  "train": {
+    "train_runtime": 2626.2285,
+    "train_samples_per_second": 17.135,
+    "train_steps_per_second": 2.142,
+    "total_flos": 1.8862168166488416e+16,
+    "train_loss": 0.6923320041232639,
+    "epoch": 5.0
+  },
+  "validation": {
+    "validation_loss": 0.6950469017028809,
+    "validation_accuracy": 0.502,
+    "validation_f1": 0.0,
+    "validation_precision": 0.0,
+    "validation_recall": 0.0,
+    "validation_roc_auc": 0.493835901374422,
+    "validation_runtime": 18.9049,
+    "validation_samples_per_second": 52.896,
+    "validation_steps_per_second": 6.612,
+    "epoch": 5.0
+  },
+  "test": {},
+  "output_dir": "runs/gue_EPI_K562/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

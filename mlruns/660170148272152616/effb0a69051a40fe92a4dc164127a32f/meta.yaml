@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/660170148272152616/effb0a69051a40fe92a4dc164127a32f/artifacts
+end_time: 1777294723308
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: effb0a69051a40fe92a4dc164127a32f
+run_name: gue_virus_covid__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260427T121949Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777292390788
+status: 3
+tags: []
+user_id: azureuser

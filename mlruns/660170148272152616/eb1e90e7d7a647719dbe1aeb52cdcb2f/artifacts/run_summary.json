@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-04-28T14:34:00Z",
+  "run_id": "gue_EPI_K562__zhihan1996_DNABERT-2-117M__20260428T135656Z",
+  "status": "failed",
+  "error": null,
+  "experiment": "gue_EPI_K562",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 5,
+  "train_bs": 8,
+  "eval_bs": 8,
+  "learning_rate": 3e-05,
+  "max_length": 3000,
+  "git_commit": "a370f5c",
+  "runtime_seconds": 2223.1932142179994,
+  "train": {},
+  "validation": {},
+  "test": {},
+  "output_dir": "runs/gue_EPI_K562/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}
