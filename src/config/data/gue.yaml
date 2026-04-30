@@ -26,13 +26,12 @@ tasks:
     train_bs: 32
     eval_bs: 32
     epochs: 10
-  EPI_K562:               # 3000bp, binary, 14k samples — long range
+  EPI_HUVEC:               # 3000bp, binary, 14k samples — long range
     num_labels: 2
     token_max_length: 768
     train_bs: 4
     eval_bs: 4
-    epochs: 5
-    eval_steps: 1000
+    epochs: 10
   emp_H3K4me1:            # 500bp, binary, 31k samples
     num_labels: 2
     token_max_length: 128
@@ -42,8 +41,8 @@ tasks:
   fungi_species_20:       # 10000bp, 20-class, 10k samples
     num_labels: 20
     token_max_length: 2048
-    train_bs: 8
-    eval_bs: 16
+    train_bs: 2
+    eval_bs: 4
     epochs: 10
     head_learning_rate: 3e-4 
   virus_covid:            # 999bp, 9-class, 91k samples — largest dataset

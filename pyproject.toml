@@ -34,7 +34,7 @@ mlflow-ui = "mlflow ui --backend-store-uri file:./mlruns --host 127.0.0.1 --port
 
 #downloads all gue datasets
 download-gue = """
-TASKS="prom_core_all splice_reconstructed human_tf_0 mouse_0 EPI_K562 emp_H3K4me1 fungi_species_20 virus_covid"
+TASKS="prom_core_all splice_reconstructed human_tf_0 mouse_0 EPI_HUVEC emp_H3K4me1 fungi_species_20 virus_covid"
 
 for task in $TASKS; do
     echo "=== Downloading $task ==="
