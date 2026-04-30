@@ -5,3 +5,8 @@ revision: null  # pin to HF commit hash for reproducibility
 max_length: 512
 import_modules: []
 label_mode: class_index
+use_lora: true
+lora_r: 8
+lora_alpha: 16
+lora_dropout: 0.05
+lora_target_modules: "query,value,key,dense"

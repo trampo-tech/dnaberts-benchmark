@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import torch
+from peft import LoraConfig, get_peft_model
 from torch import nn
 from transformers import AutoModel, AutoModelForSequenceClassification
 from transformers.modeling_outputs import SequenceClassifierOutput
@@ -127,3 +128,24 @@ def load_model_for_sequence_classification(
 		)
 		model = BackboneSequenceClassifier(backbone=backbone, num_labels=num_labels)
 		return model, ModelLoadInfo(used_fallback=True, fallback_reason=str(exc))
+
+
+def apply_lora(
+	model: nn.Module,
+	r: int,
+	lora_alpha: int,
+	lora_dropout: float,
+	target_modules: list[str],
+) -> nn.Module:
+	config = LoraConfig(
+		r=r,
+		lora_alpha=lora_alpha,
+		target_modules=target_modules,
+		lora_dropout=lora_dropout,
+		bias="none",
+		task_type="SEQ_CLS",
+		inference_mode=False,
+	)
+	model = get_peft_model(model, config)
+	model.print_trainable_parameters()
+	return model

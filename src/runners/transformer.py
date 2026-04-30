@@ -22,7 +22,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from modeling.train import load_model_for_sequence_classification
+from modeling.train import apply_lora, load_model_for_sequence_classification
 from services.benchmark_logger import (
     append_leaderboard_row,
     build_run_id,
@@ -280,6 +280,16 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int):
     configured_problem_type = getattr(cfg.model, "problem_type", None)
     if configured_problem_type is not None and model_config is not None:
         model_config.problem_type = str(configured_problem_type)
+
+    if getattr(cfg.model, "use_lora", False):
+        target_modules = str(cfg.model.lora_target_modules).split(",")
+        model = apply_lora(
+            model,
+            r=int(cfg.model.lora_r),
+            lora_alpha=int(cfg.model.lora_alpha),
+            lora_dropout=float(cfg.model.lora_dropout),
+            target_modules=target_modules,
+        )
 
     return model, model_load_info, label_mode
 def _resolve_train_override(cfg: DictConfig, key: str, default: Any = None) -> Any:
