@@ -15,7 +15,7 @@ save_total_limit: 1
 logging_steps: 20
 eval_steps: 250
 save_steps: 250
-eval_accumulation_steps: 50
+eval_accumulation_steps: ${oc.select:data.tasks.${data.task}.eval_accumulation,null}
 metric_for_best_model: f1
 early_stopping_patience: 5
 early_stopping_threshold: 0.0

@@ -1,4 +1,4 @@
-artifact_uri: file:///home/blau/projects/dnaberts-benchmark/mlruns/660170148272152616/f37eec7e82e64401b25a1219ab7508be/artifacts
+artifact_uri: file:./mlruns/660170148272152616/f37eec7e82e64401b25a1219ab7508be/artifacts
 end_time: 1777482003082
 entry_point_name: ''
 experiment_id: '660170148272152616'

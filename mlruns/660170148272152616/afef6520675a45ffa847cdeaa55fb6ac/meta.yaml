@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/afef6520675a45ffa847cdeaa55fb6ac/artifacts
+end_time: 1777988647744
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: afef6520675a45ffa847cdeaa55fb6ac
+run_name: gue_human_tf_0__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260505T133318Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777987999354
+status: 3
+tags: []
+user_id: azureuser

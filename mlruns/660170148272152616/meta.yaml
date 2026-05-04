@@ -1,4 +1,4 @@
-artifact_location: file:///home/blau/projects/dnaberts-benchmark/mlruns/660170148272152616
+artifact_location: file:./mlruns/660170148272152616
 creation_time: 1776878179344
 experiment_id: '660170148272152616'
 last_update_time: 1776878179344

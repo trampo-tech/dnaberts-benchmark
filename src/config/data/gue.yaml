@@ -41,17 +41,11 @@ tasks:
   fungi_species_20:       # 10000bp, 20-class, 10k samples
     num_labels: 20
     token_max_length: 2048
-    train_bs: 2
-    eval_bs: 4
+    train_bs: 1
+    eval_bs: 1
     epochs: 10
+    eval_accumulation: 32
     head_learning_rate: 3e-4 
-  virus_covid:            # 999bp, 9-class, 91k samples — largest dataset
-    num_labels: 9
-    token_max_length: 256
-    train_bs: 32
-    eval_bs: 32
-    epochs: 5
-    head_learning_rate: 3e-4  
 
 # ── resolved from task registry ──────────────────────────────
 num_labels: ${data.tasks.${data.task}.num_labels}
