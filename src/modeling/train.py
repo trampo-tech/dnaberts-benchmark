@@ -5,8 +5,14 @@ from typing import Any
 import torch
 from peft import LoraConfig, get_peft_model
 from torch import nn
-from transformers import AutoModel, AutoModelForSequenceClassification
+from transformers import AutoConfig, AutoModel, AutoModelForSequenceClassification
 from transformers.modeling_outputs import SequenceClassifierOutput
+
+from modeling.compat import (
+	fix_pad_token_id,
+	legacy_remote_meta_init_disabled,
+	resolve_hidden_size,
+)
 
 
 @dataclass
@@ -27,11 +33,7 @@ def _filter_forward_kwargs(module: nn.Module, kwargs: dict[str, Any]) -> dict[st
 
 
 def _resolve_hidden_size(config: Any) -> int:
-	for attr in ("hidden_size", "d_model", "dim", "n_embd"):
-		value = getattr(config, attr, None)
-		if value is not None:
-			return int(value)
-	raise ValueError("Unable to infer hidden size from backbone config.")
+	return resolve_hidden_size(config)
 
 
 class BackboneSequenceClassifier(nn.Module):
@@ -110,24 +112,35 @@ def load_model_for_sequence_classification(
 	model_name: str,
 	num_labels: int,
 	trust_remote_code: bool,
+	tokenizer: Any | None = None,
 	revision: str | None = None,
 ) -> tuple[nn.Module, ModelLoadInfo]:
-	try:
-		model = AutoModelForSequenceClassification.from_pretrained(
-			model_name,
-			num_labels=num_labels,
-			trust_remote_code=trust_remote_code,
-			revision=revision,
-		)
-		return model, ModelLoadInfo(used_fallback=False)
-	except Exception as exc:
-		backbone = AutoModel.from_pretrained(
-			model_name,
-			trust_remote_code=trust_remote_code,
-			revision=revision,
-		)
-		model = BackboneSequenceClassifier(backbone=backbone, num_labels=num_labels)
-		return model, ModelLoadInfo(used_fallback=True, fallback_reason=str(exc))
+	config = AutoConfig.from_pretrained(
+		model_name,
+		trust_remote_code=trust_remote_code,
+		revision=revision,
+	)
+	config.num_labels = num_labels
+	fix_pad_token_id(config, tokenizer)
+
+	with legacy_remote_meta_init_disabled(model_name, trust_remote_code):
+		try:
+			model = AutoModelForSequenceClassification.from_pretrained(
+				model_name,
+				config=config,
+				trust_remote_code=trust_remote_code,
+				revision=revision,
+			)
+			return model, ModelLoadInfo(used_fallback=False)
+		except Exception as exc:
+			backbone = AutoModel.from_pretrained(
+				model_name,
+				config=config,
+				trust_remote_code=trust_remote_code,
+				revision=revision,
+			)
+			model = BackboneSequenceClassifier(backbone=backbone, num_labels=num_labels)
+			return model, ModelLoadInfo(used_fallback=True, fallback_reason=str(exc))
 
 
 def apply_lora(

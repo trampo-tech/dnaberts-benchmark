@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib
 import os
-import sys
 import time
 from typing import Any
 
@@ -22,6 +21,7 @@ from transformers import (
     TrainingArguments,
 )
 
+from modeling.compat import block_triton_imports, disable_remote_flash_attention
 from modeling.train import apply_lora, load_model_for_sequence_classification
 from services.benchmark_logger import (
     append_leaderboard_row,
@@ -35,47 +35,6 @@ from services.metrics import (
     compute_metrics_from_logits,
     numeric_metrics,
 )
-
-
-def _block_triton_imports() -> None:
-    """Clear stale Triton placeholders from ``sys.modules``.
-
-    Hugging Face's remote-code loader eagerly imports absolute dependencies while
-    caching modules. Inserting ``None`` for ``triton`` makes that loader fail
-    before DNABERT-2's optional flash-attention import can fall back.
-    """
-    for key in ("triton", "triton.language", "triton.compiler", "triton.runtime"):
-        if sys.modules.get(key) is None:
-            sys.modules.pop(key, None)
-
-
-def _disable_remote_flash_attention(model: Any) -> None:
-    """Force DNABERT-style remote modules onto their PyTorch attention path."""
-    candidate_modules: list[str] = []
-
-    for module_owner in (model, getattr(model, "backbone", None)):
-        if module_owner is None:
-            continue
-
-        module_name = module_owner.__class__.__module__
-        candidate_modules.append(module_name)
-        if "." in module_name:
-            package_prefix = module_name.rsplit(".", 1)[0]
-            candidate_modules.extend(
-                name for name in sys.modules if name.startswith(f"{package_prefix}.")
-            )
-
-    seen: set[str] = set()
-    for module_name in candidate_modules:
-        if module_name in seen:
-            continue
-        seen.add(module_name)
-
-        module = sys.modules.get(module_name)
-        if module is None or not hasattr(module, "flash_attn_qkvpacked_func"):
-            continue
-
-        setattr(module, "flash_attn_qkvpacked_func", None)
 
 
 def _import_optional_modules(modules: list[str] | None):
@@ -194,7 +153,7 @@ class BenchmarkTrainer(Trainer):
 
 def _setup_environment(cfg: DictConfig) -> str:
     if getattr(cfg.model, "disable_triton", False):
-        _block_triton_imports()
+        block_triton_imports()
 
     device_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"
     print(f"  Device: {'cuda' if torch.cuda.is_available() else 'cpu'} ({device_name})")
@@ -219,7 +178,9 @@ def _load_and_tokenize(cfg: DictConfig):
     num_labels = int(getattr(cfg.data, "num_labels", None) or cfg.train.num_labels)
 
     tokenizer = AutoTokenizer.from_pretrained(
-        cfg.model.name, trust_remote_code=cfg.model.trust_remote_code
+        cfg.model.name,
+        trust_remote_code=cfg.model.trust_remote_code,
+        revision=getattr(cfg.model, "revision", None),
     )
     token_max_length = int(
         getattr(cfg.data, "token_max_length", 0)
@@ -258,10 +219,12 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int):
         cfg.model.name,
         num_labels=num_labels,
         trust_remote_code=cfg.model.trust_remote_code,
+        tokenizer=tokenizer,
+        revision=getattr(cfg.model, "revision", None),
     )
 
     if getattr(cfg.model, "disable_triton", False):
-        _disable_remote_flash_attention(model)
+        disable_remote_flash_attention(model)
 
     label_mode = str(getattr(cfg.model, "label_mode", "class_index"))
     if label_mode not in {"class_index", "one_hot"}:
