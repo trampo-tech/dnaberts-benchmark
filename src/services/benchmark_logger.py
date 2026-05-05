@@ -52,6 +52,74 @@ def _to_float(value: Any) -> float | None:
     return None
 
 
+def _csv_value(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    return json.dumps(value, sort_keys=True)
+
+
+def _merge_csv_columns(path: Path, row: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
+    if not path.exists():
+        return list(row.keys()), []
+
+    with path.open("r", encoding="utf-8", newline="") as fp:
+        reader = csv.DictReader(fp)
+        existing_rows = list(reader)
+        fieldnames = list(reader.fieldnames or [])
+
+    for key in row.keys():
+        if key not in fieldnames:
+            fieldnames.append(key)
+    return fieldnames, existing_rows
+
+
+def _write_csv_rows(path: Path, fieldnames: list[str], rows: list[dict[str, Any]]) -> None:
+    with path.open("w", encoding="utf-8", newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({key: row.get(key) for key in fieldnames})
+
+
+def append_bend_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:
+    path = Path(csv_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    row: dict[str, Any] = {}
+    for key, value in summary.items():
+        if key in {"train", "validation", "test"}:
+            continue
+        row[key] = _csv_value(value)
+
+    for prefix, metrics in (
+        ("train", summary.get("train", {})),
+        ("val", summary.get("validation", {})),
+        ("test", summary.get("test", {})),
+    ):
+        if not isinstance(metrics, dict):
+            continue
+        for key, value in metrics.items():
+            normalized_key = str(key)
+            for known_prefix in ("train_", "validation_", "test_", "val_"):
+                if normalized_key.startswith(known_prefix):
+                    normalized_key = normalized_key[len(known_prefix):]
+                    break
+            row[f"{prefix}_{normalized_key}"] = _csv_value(value)
+
+    fieldnames, existing_rows = _merge_csv_columns(path, row)
+    if existing_rows:
+        existing_rows.append(row)
+        _write_csv_rows(path, fieldnames, existing_rows)
+        return path
+
+    _write_csv_rows(path, fieldnames, [row])
+    return path
+
+
 def append_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:
     path = Path(csv_path)
     path.parent.mkdir(parents=True, exist_ok=True)

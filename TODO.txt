@@ -1,14 +1,6 @@
- [ ] Standardize batch size per task.
- [ ] Run DNABERT2 with EPI, Covid and Fungi (need re-run due to misconfiguration)
- 	- DNABERT2 is struggling on EPI might need to debug. Also there are no reported results in dnabert2 paper for this task type so no way to know for sure.
-	- For EPI the authors used  2e-5 lr and 32 batch sizes.
-	- Covid dataset reportedly struggles heavily with converging.
- [ ] Alter Nucleotide to use LoRA
- [ ] Run Nucleotide Transformer with EPI, Covid and Fungi
+ [ ] Run DNABERT2 EPI
+ [ ] Run nucleotide EPI
+ [ ] Run both models in BEND 
+ [ ] Run both models in fungi (3090) 
+ [ ] Add the Evo2 DNA Model - Needs some tinkering
 
- [ ] Add the Hyena DNA Model - Needs some tinkering
-
- [ ] Add 3 BEND dataset tasks for more variety (Shouldnt be too hard)
- [ ] Add ModernGena - Drop in transformer just make a new class, does not some light testing for performance (particularly with long-range datasets)
-
- - This shit is roughly in the order im thinking we do it
