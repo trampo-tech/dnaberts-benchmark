@@ -13,6 +13,11 @@ import torch.nn.functional as F
 from omegaconf import DictConfig
 from scipy.stats import spearmanr
 from sklearn.metrics import roc_auc_score
+try:
+    from tqdm.auto import tqdm
+except ImportError:
+    def tqdm(iterable, **kwargs):
+        return iterable
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 
 from modeling.compat import (
@@ -287,7 +292,8 @@ def run(cfg: DictConfig) -> None:
     test_metrics: dict[str, float] = {}
 
     try:
-        for start in range(0, len(variant_df), eval_bs):
+        batch_starts = range(0, len(variant_df), eval_bs)
+        for start in tqdm(batch_starts, desc="Variant effect", unit="batch"):
             batch = variant_df.iloc[start : start + eval_bs]
             ref_embeddings, warned_about_offsets = _embed_batch(
                 model,

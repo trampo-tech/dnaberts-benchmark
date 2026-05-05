@@ -1,13 +1,13 @@
 import csv
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 
 def utc_timestamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def resolve_experiment_name(cfg) -> str:
@@ -19,7 +19,7 @@ def resolve_experiment_name(cfg) -> str:
 
 def build_run_id(experiment_name: str, model_name: str) -> str:
     model_alias = model_name.replace("/", "_")
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     return f"{experiment_name}__{model_alias}__{stamp}"
 
 
@@ -71,7 +71,7 @@ def _merge_csv_columns(path: Path, row: dict[str, Any]) -> tuple[list[str], list
         existing_rows = list(reader)
         fieldnames = list(reader.fieldnames or [])
 
-    for key in row.keys():
+    for key in row:
         if key not in fieldnames:
             fieldnames.append(key)
     return fieldnames, existing_rows

@@ -129,44 +129,30 @@ uv run python src/main.py -m \
 
 BEND workflows require local raw data and an hg38 FASTA file. The prep scripts
 expect a standard indexed FASTA; `pyfaidx` will create a `.fai` on first access
-if needed.
+if needed. Default settings live in `src/config/download_bend.yaml`,
+`src/config/prepare_bend_variant_effects.yaml`,
+`src/config/prepare_bend_histone.yaml`, and
+`src/config/kmer_variant_baseline.yaml`.
 
 ### 1. Download raw BEND files from ERDA
 
-Download both supported task groups:
+Download all required task groups:
 
 ```bash
-uv run python scripts/download_bend.py --tasks variant_effects,histone_modification
+uv run python scripts/download_bend.py
 ```
-
-Download only one task group:
+Genomes is included by default because it provides the base FASTA files.
 
 ```bash
-uv run python scripts/download_bend.py --tasks variant_effects
-uv run python scripts/download_bend.py --tasks histone_modification
+uv run python scripts/download_bend.py
 ```
-
-Raw files are stored under `data/raw/bend/`.
 
 ### 2. Prepare variant-effect datasets
 
 ```bash
 uv run python scripts/prepare_bend_variant_effects.py \
-  --genome-fasta /path/to/GRCh38.primary_assembly.genome.fa
+  genome_fasta=data/raw/bend/data/genomes/GRCh38.primary_assembly.genome.fa
 ```
-
-Useful options:
-
-```bash
-uv run python scripts/prepare_bend_variant_effects.py \
-  --genome-fasta /path/to/GRCh38.primary_assembly.genome.fa \
-  --chromosomes chr22
-```
-
-This writes:
-
-- `data/processed/bend_variant_effects/expression.csv`
-- `data/processed/bend_variant_effects/disease.csv`
 
 ### 3. Run zero-shot variant-effect benchmarks
 
@@ -197,33 +183,31 @@ Expression baseline:
 
 ```bash
 uv run python scripts/kmer_variant_baseline.py \
-  --input-csv data/processed/bend_variant_effects/expression.csv \
-  --metric spearman
+  data=bend_variant_expression
 ```
 
 Disease baseline:
 
 ```bash
 uv run python scripts/kmer_variant_baseline.py \
-  --input-csv data/processed/bend_variant_effects/disease.csv \
-  --metric auroc
+  data=bend_variant_disease
 ```
 
 ### 5. Prepare the histone dataset
 
 ```bash
 uv run python scripts/prepare_bend_histone.py \
-  --genome-fasta /path/to/GRCh38.primary_assembly.genome.fa
+  genome_fasta=/path/to/GRCh38.primary_assembly.genome.fa
 ```
 
 Useful options:
 
 ```bash
 uv run python scripts/prepare_bend_histone.py \
-  --genome-fasta /path/to/GRCh38.primary_assembly.genome.fa \
-  --window-size 1024 \
-  --stride 1024 \
-  --chromosomes chr22
+  genome_fasta=/path/to/GRCh38.primary_assembly.genome.fa \
+  window_size=1024 \
+  stride=1024 \
+  'chromosomes=[chr22]'
 ```
 
 This writes:

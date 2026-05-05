@@ -99,8 +99,8 @@ def legacy_remote_meta_init_disabled(
     def _get_init_context(self, *args: Any, **kwargs: Any):
         return []
 
-    setattr(PreTrainedModel, "get_init_context", _get_init_context)
+    setattr(PreTrainedModel, "get_init_context", _get_init_context)  # noqa: B010
     try:
         yield
     finally:
-        setattr(PreTrainedModel, "get_init_context", original)
+        setattr(PreTrainedModel, "get_init_context", original)  # noqa: B010

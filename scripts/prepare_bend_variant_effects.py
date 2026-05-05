@@ -1,70 +1,39 @@
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 
+import hydra
 import pandas as pd
 from pyfaidx import Fasta
+from omegaconf import DictConfig
 
 
 DEFAULT_INPUT_DIR = Path("data/raw/bend/variant_effects")
 DEFAULT_OUTPUT_DIR = Path("data/processed/bend_variant_effects")
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Prepare BEND variant-effect CSVs with REF/ALT centered sequences."
-    )
-    parser.add_argument("--genome-fasta", required=True, help="Path to hg38 FASTA.")
-    parser.add_argument(
-        "--input-dir",
-        default=str(DEFAULT_INPUT_DIR),
-        help="Directory containing the downloaded BEND variant BED files.",
-    )
-    parser.add_argument(
-        "--output-dir",
-        default=str(DEFAULT_OUTPUT_DIR),
-        help="Directory where processed CSVs will be written.",
-    )
-    parser.add_argument(
-        "--window-size",
-        type=int,
-        default=512,
-        help="Sequence window size centered on each variant.",
-    )
-    parser.add_argument(
-        "--chromosomes",
-        default=None,
-        help="Optional comma-separated chromosome allow-list, e.g. chr22 or chr20,chr21,chr22.",
-    )
-    parser.add_argument(
-        "--expression-bed",
-        default=None,
-        help="Override path for the expression BED file.",
-    )
-    parser.add_argument(
-        "--disease-bed",
-        default=None,
-        help="Override path for the disease BED file.",
-    )
-    return parser.parse_args()
-
-
-def _resolve_bed_path(input_dir: Path, override: str | None, filename: str) -> Path:
-    if override:
-        return Path(override)
-    return input_dir / filename
+def _normalize_bed_columns(columns: list[object]) -> list[str]:
+    aliases = {
+        "#chrom": "chrom",
+        "#chromosome": "chrom",
+        "chromosome": "chrom",
+    }
+    normalized: list[str] = []
+    for column in columns:
+        name = str(column).strip().lower()
+        normalized.append(aliases.get(name, name))
+    return normalized
 
 
 def _load_bed(path: Path, label_dtype: str) -> pd.DataFrame:
-    df = pd.read_csv(path, sep="\t", comment="#", header=None)
+    df = pd.read_csv(path, sep="\t", comment="#", header=None, dtype=str, low_memory=False)
     if df.empty:
         raise SystemExit(f"Input BED is empty: {path}")
 
-    header_candidates = {str(value).strip().lower() for value in df.iloc[0].tolist()}
+    header_candidates = set(_normalize_bed_columns(df.iloc[0].tolist()))
     has_header = {"chrom", "start", "end"}.issubset(header_candidates)
     if has_header:
-        columns = [str(value).strip().lower() for value in df.iloc[0].tolist()]
+        columns = _normalize_bed_columns(df.iloc[0].tolist())
         df = df.iloc[1:].reset_index(drop=True)
         df.columns = columns
     else:
@@ -214,45 +183,50 @@ def _process_dataset(
     return pd.DataFrame(rows)
 
 
-def main() -> None:
-    args = parse_args()
-    input_dir = Path(args.input_dir)
-    output_dir = Path(args.output_dir)
+def _parse_chromosomes(chromosomes: object) -> set[str] | None:
+    if chromosomes is None:
+        return None
+    if isinstance(chromosomes, str):
+        values = chromosomes.split(",")
+    else:
+        values = list(chromosomes)
+    normalized = {str(chrom).strip() for chrom in values if str(chrom).strip()}
+    return normalized or None
+
+
+@hydra.main(
+    version_base=None,
+    config_path="../src/config",
+    config_name="prepare_bend_variant_effects",
+)
+def main(cfg: DictConfig) -> None:
+    input_dir = Path(cfg.input_dir)
+    output_dir = Path(cfg.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    expression_bed = _resolve_bed_path(
-        input_dir,
-        args.expression_bed,
-        "variant_effects_expression.bed",
-    )
-    disease_bed = _resolve_bed_path(
-        input_dir,
-        args.disease_bed,
-        "variant_effects_disease.bed",
-    )
+    expression_bed = Path(cfg.datasets.expression.input_bed)
+    disease_bed = Path(cfg.datasets.disease.input_bed)
 
-    genome = Fasta(args.genome_fasta, sequence_always_upper=True, as_raw=False)
-    chromosome_filter = None
-    if args.chromosomes:
-        chromosome_filter = {chrom.strip() for chrom in args.chromosomes.split(",") if chrom.strip()}
+    genome = Fasta(str(cfg.genome_fasta), sequence_always_upper=True, as_raw=False)
+    chromosome_filter = _parse_chromosomes(cfg.chromosomes)
 
     expression_df = _process_dataset(
         expression_bed,
-        label_dtype="float",
+        label_dtype=str(cfg.datasets.expression.label_dtype),
         genome=genome,
-        window_size=args.window_size,
+        window_size=int(cfg.window_size),
         chromosome_filter=chromosome_filter,
     )
     disease_df = _process_dataset(
         disease_bed,
-        label_dtype="int",
+        label_dtype=str(cfg.datasets.disease.label_dtype),
         genome=genome,
-        window_size=args.window_size,
+        window_size=int(cfg.window_size),
         chromosome_filter=chromosome_filter,
     )
 
-    expression_out = output_dir / "expression.csv"
-    disease_out = output_dir / "disease.csv"
+    expression_out = Path(cfg.datasets.expression.output_csv)
+    disease_out = Path(cfg.datasets.disease.output_csv)
     expression_df.to_csv(expression_out, index=False)
     disease_df.to_csv(disease_out, index=False)
     print(f"Wrote {expression_out}")

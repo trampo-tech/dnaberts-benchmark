@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 import numpy as np
 from sklearn.metrics import matthews_corrcoef, roc_auc_score
 
@@ -18,12 +16,10 @@ def positive_class_probability(logits: np.ndarray) -> np.ndarray:
     return probs[:, 1]
 
 
-def numeric_metrics(metrics: Mapping[str, object]) -> dict[str, float]:
+def numeric_metrics(metrics: dict[str, object]) -> dict[str, float]:
     out: dict[str, float] = {}
     for key, value in metrics.items():
-        if isinstance(value, bool):
-            out[key] = float(value)
-        elif isinstance(value, (int, float)):
+        if  isinstance(value, (bool, int, float)):
             out[key] = float(value)
     return out
 

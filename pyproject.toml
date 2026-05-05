@@ -46,9 +46,9 @@ done
 """ 
 
 download-bend = "uv run python scripts/download_bend.py"
-download-bend-variants = "uv run python scripts/prepare_bend_variant_effects.py --genome-fasta <path>"
-download-bend-histone = "uv run python scripts/prepare_bend_histone.py --genome-fasta <path>"
-kmer-variant-baseline = "uv run python scripts/kmer_variant_baseline.py --input-csv <path> --metric <spearman|auroc>"
+download-bend-variants = "uv run python scripts/prepare_bend_variant_effects.py genome_fasta=<path>"
+download-bend-histone = "uv run python scripts/prepare_bend_histone.py genome_fasta=<path>"
+kmer-variant-baseline = "uv run python scripts/kmer_variant_baseline.py"
 
 [[tool.uv.index]]
 name = "pytorch-cu13"

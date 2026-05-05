@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 
+import hydra
 import pandas as pd
 from pyfaidx import Fasta
+from omegaconf import DictConfig
 
 
 DEFAULT_INPUT_DIR = Path("data/raw/bend/histone_modification")
@@ -13,47 +14,6 @@ DEFAULT_OUTPUT_DIR = Path("data/processed/bend_histone")
 TRAIN_CHROMS = {f"chr{i}" for i in range(1, 17)}
 VAL_CHROMS = {f"chr{i}" for i in range(17, 20)}
 TEST_CHROMS = {"chr20", "chr21", "chr22", "chrX"}
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Prepare BEND histone-modification CSVs from 512 bp BED bins."
-    )
-    parser.add_argument("--genome-fasta", required=True, help="Path to hg38 FASTA.")
-    parser.add_argument(
-        "--input-dir",
-        default=str(DEFAULT_INPUT_DIR),
-        help="Directory containing downloaded BEND histone BED files.",
-    )
-    parser.add_argument(
-        "--output-dir",
-        default=str(DEFAULT_OUTPUT_DIR),
-        help="Directory where processed CSVs will be written.",
-    )
-    parser.add_argument(
-        "--window-size",
-        type=int,
-        default=1024,
-        help="Sequence window size in base pairs.",
-    )
-    parser.add_argument(
-        "--stride",
-        type=int,
-        default=None,
-        help="Window stride in base pairs. Defaults to window-size.",
-    )
-    parser.add_argument(
-        "--label-span-bp",
-        type=int,
-        default=512,
-        help="Resolution of each raw histone label bin in base pairs.",
-    )
-    parser.add_argument(
-        "--chromosomes",
-        default=None,
-        help="Optional comma-separated chromosome allow-list.",
-    )
-    return parser.parse_args()
 
 
 def _resolve_chromosome(genome: Fasta, chrom: str) -> str | None:
@@ -154,24 +114,37 @@ def _load_all_histone_rows(input_dir: Path) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
-def main() -> None:
-    args = parse_args()
-    stride = args.stride or args.window_size
-    if args.window_size % args.label_span_bp != 0:
+def _parse_chromosomes(chromosomes: object) -> set[str] | None:
+    if chromosomes is None:
+        return None
+    if isinstance(chromosomes, str):
+        values = chromosomes.split(",")
+    else:
+        values = list(chromosomes)
+    normalized = {str(chrom).strip() for chrom in values if str(chrom).strip()}
+    return normalized or None
+
+
+@hydra.main(version_base=None, config_path="../src/config", config_name="prepare_bend_histone")
+def main(cfg: DictConfig) -> None:
+    window_size = int(cfg.window_size)
+    label_span_bp = int(cfg.label_span_bp)
+    stride = int(cfg.stride) if cfg.stride is not None else window_size
+    if window_size % label_span_bp != 0:
         raise SystemExit("window-size must be divisible by label-span-bp")
-    if stride % args.label_span_bp != 0:
+    if stride % label_span_bp != 0:
         raise SystemExit("stride must be divisible by label-span-bp")
 
-    bins_per_window = args.window_size // args.label_span_bp
-    stride_bins = stride // args.label_span_bp
-    input_dir = Path(args.input_dir)
-    output_dir = Path(args.output_dir)
+    bins_per_window = window_size // label_span_bp
+    stride_bins = stride // label_span_bp
+    input_dir = Path(cfg.input_dir)
+    output_dir = Path(cfg.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    genome = Fasta(args.genome_fasta, sequence_always_upper=True, as_raw=False)
+    genome = Fasta(str(cfg.genome_fasta), sequence_always_upper=True, as_raw=False)
 
     df = _load_all_histone_rows(input_dir)
-    if args.chromosomes:
-        chromosome_filter = {chrom.strip() for chrom in args.chromosomes.split(",") if chrom.strip()}
+    chromosome_filter = _parse_chromosomes(cfg.chromosomes)
+    if chromosome_filter:
         df = df[df["chrom"].isin(chromosome_filter)].reset_index(drop=True)
 
     df = df.sort_values(["chrom", "start", "end"]).reset_index(drop=True)
@@ -191,16 +164,16 @@ def main() -> None:
         for row_index in range(0, len(chrom_df) - bins_per_window + 1, stride_bins):
             window = chrom_df.iloc[row_index : row_index + bins_per_window]
             expected_starts = [
-                int(window.iloc[0]["start"]) + offset * args.label_span_bp
+                int(window.iloc[0]["start"]) + offset * label_span_bp
                 for offset in range(bins_per_window)
             ]
             if window["start"].tolist() != expected_starts:
                 continue
 
             window_start = int(window.iloc[0]["start"])
-            window_end = window_start + args.window_size
+            window_end = window_start + window_size
             sequence = genome[resolved_chrom][window_start:window_end].seq.upper()
-            if len(sequence) != args.window_size:
+            if len(sequence) != window_size:
                 continue
 
             labels = window[[f"label_{index}" for index in range(18)]].astype(int).values.tolist()

@@ -1,0 +1,14 @@
+genome_fasta: ???
+input_dir: data/raw/bend/data/variant_effects
+output_dir: data/processed/bend_variant_effects
+window_size: 512
+chromosomes: null
+datasets:
+  expression:
+    input_bed: ${input_dir}/variant_effects_expression.bed
+    output_csv: ${output_dir}/expression.csv
+    label_dtype: float
+  disease:
+    input_bed: ${input_dir}/variant_effects_disease.bed
+    output_csv: ${output_dir}/disease.csv
+    label_dtype: int

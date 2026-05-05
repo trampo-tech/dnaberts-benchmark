@@ -1,0 +1,5 @@
+tasks:
+  - variant_effects
+  - histone_modification
+  - genomes
+output_dir: data/raw/bend
