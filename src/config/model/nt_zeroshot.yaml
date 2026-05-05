@@ -1,0 +1,6 @@
+type: variant_effect_zeroshot
+name: InstaDeepAI/nucleotide-transformer-v2-500m-multi-species
+trust_remote_code: true
+revision: null
+disable_triton: false
+max_length: 128

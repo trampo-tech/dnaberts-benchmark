@@ -21,6 +21,8 @@ def set_seed(seed: int):
 RUNNERS = {
     "transformer": "runners.transformer",
     "kmer_logreg": "runners.kmer_logreg",
+    "bend_token_clf": "runners.bend_token_classification",
+    "variant_effect_zeroshot": "runners.variant_effect_zeroshot",
 }
 
 
