@@ -7,10 +7,12 @@ requires-python = ">=3.11"
 dependencies = [
     "accelerate>=1.13.0",
     "biopython>=1.87",
+    "beautifulsoup4>=4.12.0",
     "datasets>=4.8.4",
     "einops>=0.8.2",
     "evaluate>=0.4.6",
     "hydra-core>=1.3.2",
+    "lxml>=5.0.0",
     "mlflow>=3.2.0,<4.0.0",
     "pandas>=2.2.0,<3.0.0",
     "protobuf>=4.25.0,<6.0.0",
@@ -42,6 +44,11 @@ for task in $TASKS; do
     uv run python scripts/prepare_hf_dataset.py leannmlindsey/GUE --task "$task"
 done
 """ 
+
+download-bend = "uv run python scripts/download_bend.py"
+download-bend-variants = "uv run python scripts/prepare_bend_variant_effects.py --genome-fasta <path>"
+download-bend-histone = "uv run python scripts/prepare_bend_histone.py --genome-fasta <path>"
+kmer-variant-baseline = "uv run python scripts/kmer_variant_baseline.py --input-csv <path> --metric <spearman|auroc>"
 
 [[tool.uv.index]]
 name = "pytorch-cu13"
