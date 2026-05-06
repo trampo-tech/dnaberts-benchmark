@@ -1,0 +1,8 @@
+artifact_location: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/856414333503727920
+creation_time: 1778067106472
+experiment_id: '856414333503727920'
+last_update_time: 1778067106472
+lifecycle_stage: active
+name: bend_variant_expression
+trace_location: null
+workspace: default

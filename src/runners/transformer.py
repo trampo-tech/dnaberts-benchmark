@@ -214,7 +214,7 @@ def _load_and_tokenize(cfg: DictConfig):
     return tokenized, tokenizer, num_labels, token_max_length
 
 
-def _load_and_configure_model(cfg: DictConfig, num_labels: int):
+def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any = None):
     model, model_load_info = load_model_for_sequence_classification(
         cfg.model.name,
         num_labels=num_labels,
@@ -450,7 +450,7 @@ def run(cfg: DictConfig) -> None:
     tokenized, tokenizer, num_labels, token_max_length = _load_and_tokenize(cfg)
 
     # -- Model ----------------------------------------------------------------
-    model, model_load_info, label_mode = _load_and_configure_model(cfg, num_labels)
+    model, model_load_info, label_mode = _load_and_configure_model(cfg, num_labels, tokenizer)
 
     # -- Metrics & output paths -----------------------------------------------
     metric_average = str(_resolve_train_override(cfg, "metric_average", "macro"))

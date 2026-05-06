@@ -32,7 +32,7 @@ def get_git_commit() -> str | None:
             text=True,
         )
         return result.stdout.strip()
-    except Exception:
+    except (FileNotFoundError, OSError, subprocess.CalledProcessError):
         return None
 
 
@@ -62,18 +62,49 @@ def _csv_value(value: Any) -> Any:
     return json.dumps(value, sort_keys=True)
 
 
+def _normalize_fieldname(fieldname: Any) -> str:
+    return str(fieldname or "").strip()
+
+
+def _normalize_csv_row(row: dict[str, Any]) -> dict[str, Any]:
+    normalized: dict[str, Any] = {}
+    for key, value in row.items():
+        if key is None:
+            continue
+        normalized_key = _normalize_fieldname(key)
+        if not normalized_key or normalized_key == "test_spearman_r":
+            continue
+        existing_value = normalized.get(normalized_key)
+        if normalized_key not in normalized or (existing_value in (None, "") and value not in (None, "")):
+            normalized[normalized_key] = value
+    return normalized
+
+
+def _deduplicate_fieldnames(fieldnames: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    for fieldname in fieldnames:
+        canonical = _normalize_fieldname(fieldname)
+        if not canonical or canonical in seen:
+            continue
+        seen.add(canonical)
+        result.append(canonical)
+    return result
+
+
 def _merge_csv_columns(path: Path, row: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
     if not path.exists():
-        return list(row.keys()), []
+        return _deduplicate_fieldnames(list(row.keys())), []
 
     with path.open("r", encoding="utf-8", newline="") as fp:
         reader = csv.DictReader(fp)
-        existing_rows = list(reader)
-        fieldnames = list(reader.fieldnames or [])
+        existing_rows = [_normalize_csv_row(existing_row) for existing_row in reader]
+        fieldnames = _deduplicate_fieldnames(list(reader.fieldnames or []))
 
     for key in row:
-        if key not in fieldnames:
-            fieldnames.append(key)
+        normalized_key = _normalize_fieldname(key)
+        if normalized_key and normalized_key not in fieldnames:
+            fieldnames.append(normalized_key)
     return fieldnames, existing_rows
 
 
@@ -93,7 +124,10 @@ def append_bend_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:
     for key, value in summary.items():
         if key in {"train", "validation", "test"}:
             continue
-        row[key] = _csv_value(value)
+        normalized_key = _normalize_fieldname(key)
+        if not normalized_key:
+            continue
+        row[normalized_key] = _csv_value(value)
 
     for prefix, metrics in (
         ("train", summary.get("train", {})),
@@ -108,7 +142,11 @@ def append_bend_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:
                 if normalized_key.startswith(known_prefix):
                     normalized_key = normalized_key[len(known_prefix):]
                     break
+            if prefix == "test" and normalized_key == "spearman_r":
+                continue
             row[f"{prefix}_{normalized_key}"] = _csv_value(value)
+
+    row = _normalize_csv_row(row)
 
     fieldnames, existing_rows = _merge_csv_columns(path, row)
     if existing_rows:

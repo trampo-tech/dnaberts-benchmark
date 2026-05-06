@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-05-06T14:15:46Z",
+  "run_id": "bend_variant_disease__zhihan1996_DNABERT-2-117M__20260506T130727Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "bend_variant_disease",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": null,
+  "train_bs": null,
+  "eval_bs": 64,
+  "learning_rate": null,
+  "metric": "auroc",
+  "max_length": 128,
+  "git_commit": "17c982a",
+  "runtime_seconds": 4091.5068982069997,
+  "n_variants": 295495,
+  "mean_cosine_distance": 0.11200546240729525,
+  "train": {},
+  "validation": {},
+  "test": {
+    "auroc": 0.5439962701432888
+  },
+  "output_dir": "runs/bend_variant_disease/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

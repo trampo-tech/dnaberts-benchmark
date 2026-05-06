@@ -5,4 +5,4 @@ alt_col: alt_sequence
 label_col: label
 token_max_length: 128
 eval_bs: 64
-metric: spearman
+metric: auroc

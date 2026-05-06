@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/856414333503727920/f28cb319fdf14761ab3d9e12a52c0fcc/artifacts
+end_time: 1778068596465
+entry_point_name: ''
+experiment_id: '856414333503727920'
+lifecycle_stage: active
+run_id: f28cb319fdf14761ab3d9e12a52c0fcc
+run_name: bend_variant_expression__zhihan1996_DNABERT-2-117M__20260506T113120Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778067106561
+status: 3
+tags: []
+user_id: azureuser
