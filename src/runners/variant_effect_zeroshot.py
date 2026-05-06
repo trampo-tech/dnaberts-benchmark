@@ -20,7 +20,7 @@ except ImportError:
     def tqdm(iterable, **kwargs):
         return iterable
 
-from transformers import AutoConfig, AutoModel, AutoTokenizer
+from transformers import AutoConfig, AutoModel, AutoModelForMaskedLM, AutoTokenizer
 
 from modeling.compat import (
     block_triton_imports,
@@ -77,12 +77,26 @@ def _load_backbone(cfg: DictConfig, tokenizer) -> torch.nn.Module:
     fix_pad_token_id(config, tokenizer)
 
     with legacy_remote_meta_init_disabled(cfg.model.name, cfg.model.trust_remote_code):
-        model = AutoModel.from_pretrained(
-            cfg.model.name,
-            config=config,
-            trust_remote_code=cfg.model.trust_remote_code,
-            revision=revision,
-        )
+        try:
+            model = AutoModel.from_pretrained(
+                cfg.model.name,
+                config=config,
+                trust_remote_code=cfg.model.trust_remote_code,
+                revision=revision,
+            )
+        except RuntimeError as exc:
+            if "size mismatch" not in str(exc):
+                raise
+
+            mlm_model = AutoModelForMaskedLM.from_pretrained(
+                cfg.model.name,
+                config=config,
+                trust_remote_code=cfg.model.trust_remote_code,
+                revision=revision,
+            )
+            model = getattr(mlm_model, "esm", None)
+            if model is None:
+                raise
 
     if getattr(cfg.model, "disable_triton", False):
         disable_remote_flash_attention(model)
