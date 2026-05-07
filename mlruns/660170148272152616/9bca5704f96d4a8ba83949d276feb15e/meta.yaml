@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/9bca5704f96d4a8ba83949d276feb15e/artifacts
+end_time: 1778169406801
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 9bca5704f96d4a8ba83949d276feb15e
+run_name: gue_EPI_HUVEC__zhihan1996_DNABERT-2-117M__20260507T154619Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778168779793
+status: 3
+tags: []
+user_id: azureuser
