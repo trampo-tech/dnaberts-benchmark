@@ -1,23 +1,9 @@
+```sh /home/blau/projects/dnaberts-benchmark/run_benchmarks.sh
 #!/bin/bash
 set -e
 
-NUM_GPUS=$(uv run python -c "import torch; print(torch.cuda.device_count())" 2>/dev/null || echo 0)
-
-if [ "$NUM_GPUS" -gt 1 ]; then
-    ACCEL_ARGS=(--multi_gpu --num_processes "$NUM_GPUS" --mixed_precision fp16)
-    echo "[INFO] Detected $NUM_GPUS GPUs → using accelerate DDP for GUE tasks"
-elif [ "$NUM_GPUS" -eq 1 ]; then
-    ACCEL_ARGS=(--mixed_precision fp16)
-    echo "[INFO] Detected 1 GPU → using accelerate"
-else
-    ACCEL_ARGS=(--cpu)
-    echo "[INFO] No GPU detected → running GUE tasks on CPU"
-fi
-
-echo ""
-
 echo "Running GUE tasks..."
-uv run accelerate launch "${ACCEL_ARGS[@]}" src/main.py -m \
+uv run python src/main.py -m \
   data=gue \
   data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,EPI_HUVEC,emp_H3K4me1,fungi_species_20 \
   model=dnabert2,nucleotide_transformer \
