@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/04ef034c8dff45cfa4bde98f737457b3/artifacts
+end_time: 1778343937783
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 04ef034c8dff45cfa4bde98f737457b3
+run_name: gue_fungi_species_20__zhihan1996_DNABERT-2-117M__20260509T144254Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778337774745
+status: 3
+tags: []
+user_id: matheus.girardi

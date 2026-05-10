@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/d4fcc50e6461439d87aafd6c78ee3d8a/artifacts
+end_time: 1778291096306
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: d4fcc50e6461439d87aafd6c78ee3d8a
+run_name: gue_mouse_0__zhihan1996_DNABERT-2-117M__20260509T014236Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778290956187
+status: 3
+tags: []
+user_id: matheus.girardi

@@ -1,4 +1,3 @@
-```sh /home/blau/projects/dnaberts-benchmark/run_benchmarks.sh
 #!/bin/bash
 set -e
 
