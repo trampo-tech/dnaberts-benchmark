@@ -4,15 +4,9 @@
 
 #show: ilm.with(
   title: [Benchmark de Modelos de\ Fundação Genômicos],
-  authors: "Matheus Girardi",
   date: datetime(year: 2026, month: 05, day: 12),
+  author: "Matheus Girardi, Gabriel Bau",
   abstract: [
-    Relatório de progresso do benchmark comparando DNABERT-2 (117M) e
-    Nucleotide Transformer v2 (500M multi-espécies) nas tarefas do GUE
-    (Genome Understanding Evaluation) e BEND (variant effects), executados
-    em uma NVIDIA GeForce RTX 4090. Os resultados (MCC para GUE e AUROC
-    para BEND) são comparados com os valores de referência reportados na
-    literatura.
   ],
   table-of-contents: outline(title: "Índice"),
 )
@@ -27,9 +21,12 @@ Atualmente, dois modelos foram avaliados em todas as tarefas GUE e nas tarefas d
 = Última reunião
 
 Analisamos outros benchmarks e como foram feitos:
-Fundamentalmente o que fizemos não é grande novidade, recriamos resultados,  o fator novidade seria o comparativo com o modelo Evo2 que no paper original não se comparou aos modelos que utlizamos aqui e nem utilizou tasks da comunidade. E se adicionarmos o novo dataset teremos algo novo interessante. Acredito que temos um potencial interessante de comparar e contrastar modelos, no entanto agora temos uma limitação de tempo e isso que nos preocupa, no entanto discussões para próximas etapas estão ao final deste relatório. 
+Fundamentalmente o que fizemos não é grande novidade, apenas recriamos resultados até então. O fator novidade seria o comparativo com o modelo Evo2, que em seu paper original não se comparou aos modelos que utlizamos aqui e nem utilizou tasks da comunidade.
+Ademais, se adicionarmos o novo dataset conforme conversado teríamos outro fator novo. Acredito que temos um potencial interessante de comparar e contrastar modelos, no entanto agora temos uma limitação de tempo e isso que nos preocupa. Discussões sobre seguem ao final deste relatório.
+Falando um pouco da metodologia que estamos utilizando, nossas métricas seguem outros benchmarks na área. As tarefas são provenientes de benchmarks publicamente disponíveis.
 
-Succintamente, queremos definir uma rota para seguirmos que providencie um resultado satisfatório para a disciplina.
+
+Succintamente, o objetivo aqui é definirmos uma rota para chegarmos em um resultado satisfatório para a disciplina.
 
 = Tarefas Implementadas
 
@@ -73,7 +70,7 @@ As tarefas de efeito de variante do BEND utilizam a abordagem zero-shot: calcula
 As principais discrepâncias comparando com os códigos presentes no Github são:
 
 - *Learning rate do NT*: Utilizamos 3e-5 (mesmo valor do DNABERT-2),
-  enquanto o script oficial usa 1e-4. 
+  enquanto o script oficial usa 1e-4.
 - *Batch size*: Nosso benchmark utiliza batch sizes maiores (32 vs. 8),
   resultando em menos passos de gradiente por época. Combinado com early
   stopping, isso pode levar a treinamento insuficiente em datasets pequenos.
@@ -154,7 +151,7 @@ A questão que fica é como devemos proceder nessa tarefa? É uma tarefa interes
 == Modelo Evo2 nas tarefas GUE
 
 Adicionar o modelo Evo2 (Arc Institute)ao benchmark já foi realizado com uma implementação LoRA adaptada de https://github.com/NVIDIA/bionemo-framework/issues/884 utilizando PEFT, não é 100% igual devido à limitações do wrapper PEFT em cima de camadas Lineares da Transformer Engine (TELinear e não nn.Linear)
-Agora falta executá-lo em todas as 7 tarefas GUE. Este modelo utiliza uma arquitetura diferente (Striped Hyena) e foi treinado em uma escala massiva de genomas. 
+Agora falta executá-lo em todas as 7 tarefas GUE. Este modelo utiliza uma arquitetura diferente (Striped Hyena) e foi treinado em uma escala massiva de genomas.
 
 === Possíveis riscos
 O modelo evo2 é significativamente maior que os outros modelos que estamos lidando, a utilização de LoRA é vital para podermos treinar algo e ainda é possível que ocorram erros entre a integração do PEFT com o modelo. Assim, uma direção alternativa que podemos tomar seria comparar esse modelo em um formato zeroshot nas tarefas treinando apenas o classificador, uma vez que nosos benchmark é limitado a hardware de nível consumidor.
@@ -165,7 +162,7 @@ Executar DNABERT-2 e Nucleotide Transformer na tarefa de modificação de
 histonas do BEND (`bend_histone`). A implementação atual foi adaptada da original do paper BEND e utiliza uma CNN como header. Para comparações com os outros modelos acreditamos melhor trocar essa head por uma camada linear simples como nas outras tarefas.
 
 === Possíveis riscos
-Essa adaptação pode levar a uma pior performance dos modelos do que foi reportado pelos criadores do BEND 
+Essa adaptação pode levar a uma pior performance dos modelos do que foi reportado pelos criadores do BEND
 
 == Modelo Evo2 nas tarefas BEND
 
@@ -179,7 +176,7 @@ tarefas BEND:
 - Executar o sweep com 2 sementes e comparar com os resultados atuais.
 
 
-== Adição do dataset 
+== Adição do dataset
 Na última reunião e em discussões subsequentes foi comentado que poderíamos adicionar um novo dataset para execuções, proveniente da equipe. Algumas dúvidas para resolvermos:
 - Qual a natureza desse dataset?
 - Quantos ajustes teriam de ser feitos para este dataset ter formato sequência:label. Ou seja o quão cru esse dataset é?
