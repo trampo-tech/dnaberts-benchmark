@@ -45,6 +45,7 @@ tasks:
     eval_bs: 1
     epochs: 10
     eval_accumulation: 32
+    gradient_accumulation_steps: 32
     head_learning_rate: 3e-4 
 
 # ── resolved from task registry ──────────────────────────────
