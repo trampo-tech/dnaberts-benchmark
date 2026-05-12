@@ -5,7 +5,7 @@ echo "Running GUE tasks..."
 uv run python src/main.py -m \
   data=gue \
   data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,EPI_HUVEC,emp_H3K4me1,fungi_species_20 \
-  model=dnabert2,nucleotide_transformer \
+  model=dnabert2,nucleotide_transformer,evo2 \
   seed=63194,21194
 
 echo ""

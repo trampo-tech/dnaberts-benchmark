@@ -1,6 +1,3 @@
  [ ] Run DNABERT2 EPI no early stopping
- [ ] Run nucleotide EPI no early stopping
- [ ] Run both models in BEND 
- [ ] Run both models in fungi (3090) 
  [ ] Add the Evo2 DNA Model - Needs some tinkering
 

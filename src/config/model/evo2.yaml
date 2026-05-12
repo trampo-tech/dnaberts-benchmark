@@ -1,0 +1,13 @@
+type: evo2
+name: evo2_1b_base
+trust_remote_code: false
+max_length: 8192
+import_modules: []
+label_mode: class_index
+layer_name: "blocks.18.mlp.l3"
+use_lora: true
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.1
+lora_target_modules: "mlp.l1,mlp.l2,mlp.l3,out_filter_dense"
+gradient_accumulation_steps: 4

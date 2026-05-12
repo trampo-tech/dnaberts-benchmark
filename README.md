@@ -56,6 +56,7 @@ sequence lengths, species, and label counts. Per-task training parameters
 | DNABERT-2 zero-shot variant effect | `model=dnabert2_zeroshot` | Zero-shot backbone |
 | Nucleotide Transformer zero-shot variant effect | `model=nt_zeroshot` | Zero-shot backbone |
 | DNABERT-2 histone token classifier | `model=dnabert2_histone` | Transformer + CNN decoder |
+| EVO 2 (1B base) | `model=evo2` | Hyena + LoRA probe |
 | K-mer + Logistic Regression | `model=kmer_logreg` | Baseline |
 
 ## Quickstart
@@ -65,6 +66,9 @@ sequence lengths, species, and label counts. Per-task training parameters
 ```bash
 uv sync
 ```
+
+> **EVO 2 only:** `flash-attn` must be installed separately before running
+> EVO 2 benchmarks (see the [EVO 2 section](#evo-2) below for details).
 
 ### 2. Download all GUE tasks
 
@@ -122,6 +126,48 @@ uv run python src/main.py -m \
   data=gue \
   data.task=splice_reconstructed \
   seed=42,123,456
+```
+
+### EVO 2
+
+EVO 2 is a Hyena-based DNA language model from the Arc Institute, loaded via the
+`evo2` PyPI package (not HuggingFace Transformers). It uses a byte-level
+`CharLevelTokenizer` where 1 token ≈ 1 nucleotide, making sequences ~5× longer
+in token count than BPE tokenizers like DNABERT-2's. LoRA is applied to MLP
+layers (`mlp.l1`, `mlp.l2`, `mlp.l3`, `out_filter_dense`) while the backbone
+remains frozen.
+
+**Differences from other models:**
+
+- **Not an HF model** — loaded from `evo2.Evo2("evo2_1b_base")`, not `AutoModel`.
+  The training loop bypasses the standard `DataCollatorWithPadding` in favour of
+  pre-padded sequences with `default_data_collator`.
+- **Flash-Attention required** — `evo2` depends on `flash-attn` internally. It
+  is not listed in `pyproject.toml` because it has no pre-built wheels on PyPI.
+  Install it from the GitHub release before running:
+  ```bash
+  uv pip install "https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl"
+  ```
+  (Adjust the wheel tag to match your CUDA / PyTorch version.)
+- **VRAM** — the default `evo2_1b_base` (~2.2 GB bf16 + activations) fits on a
+  12 GB GPU. For a 24 GB GPU you can switch to the 7B model:
+  ```bash
+  uv run python src/main.py data=gue data.task=prom_core_all model=evo2 model.name=evo2_7b_base model.layer_name=blocks.28.mlp.l3
+  ```
+- **LoRA-only** — only LoRA adapter weights (~10M) are trained. The base model
+  is frozen. PEFT wraps the StripedHyena backbone, and the classifier head sits
+  on top of a single intermediate layer embedding (mean-pooled).
+- **bf16** — EVO 2 weights are natively bfloat16. The runner automatically
+  enables `bf16` mixed precision and disables `fp16`.
+- **Monkey-patch for 1B model** — the `evo2_1b_base` config requires Transformer
+  Engine for FP8 projections, which is not installed. A one-line patch in
+  `.venv/.../evo2/models.py` allows the 1B model to fall back to bf16 (same
+  behaviour as the 7B model). This is applied automatically at install time.
+
+**Quick test:**
+
+```bash
+uv run python src/main.py data=gue data.task=prom_core_all model=evo2 seed=42
 ```
 
 

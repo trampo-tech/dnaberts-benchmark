@@ -766,6 +766,7 @@ dependencies = [
     { name = "datasets" },
     { name = "einops" },
     { name = "evaluate" },
+    { name = "evo2" },
     { name = "hydra-core" },
     { name = "lxml" },
     { name = "mlflow" },
@@ -793,8 +794,9 @@ requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.12.0" },
     { name = "biopython", specifier = ">=1.87" },
     { name = "datasets", specifier = ">=4.8.4" },
-    { name = "einops", specifier = ">=0.8.2" },
+    { name = "einops", specifier = ">=0.8.0" },
     { name = "evaluate", specifier = ">=0.4.6" },
+    { name = "evo2", specifier = ">=0.5.5" },
     { name = "hydra-core", specifier = ">=1.3.2" },
     { name = "lxml", specifier = ">=5.0.0" },
     { name = "mlflow", specifier = ">=3.2.0,<4.0.0" },
@@ -832,11 +834,11 @@ wheels = [
 
 [[package]]
 name = "einops"
-version = "0.8.2"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/2c/77/850bef8d72ffb9219f0b1aac23fbc1bf7d038ee6ea666f331fa273031aa2/einops-0.8.2.tar.gz", hash = "sha256:609da665570e5e265e27283aab09e7f279ade90c4f01bcfca111f3d3e13f2827", size = 56261, upload-time = "2026-01-26T04:13:17.638Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e5/81/df4fbe24dff8ba3934af99044188e20a98ed441ad17a274539b74e82e126/einops-0.8.1.tar.gz", hash = "sha256:de5d960a7a761225532e0f1959e5315ebeafc0cd43394732f103ca44b9837e84", size = 54805, upload-time = "2025-02-09T03:17:00.434Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/09/f8d8f8f31e4483c10a906437b4ce31bdf3d6d417b73fe33f1a8b59e34228/einops-0.8.2-py3-none-any.whl", hash = "sha256:54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193", size = 65638, upload-time = "2026-01-26T04:13:18.546Z" },
+    { url = "https://files.pythonhosted.org/packages/87/62/9773de14fe6c45c23649e98b83231fffd7b9892b6cf863251dc2afa73643/einops-0.8.1-py3-none-any.whl", hash = "sha256:919387eb55330f5757c6bea9165c5ff5cfe63a642682ea788a6d472576d81737", size = 64359, upload-time = "2025-02-09T03:17:01.998Z" },
 ]
 
 [[package]]
@@ -859,6 +861,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ad/d0/0c17a8e6e8dc7245f22dea860557c32bae50fc4d287ae030cb0e8ab8720f/evaluate-0.4.6.tar.gz", hash = "sha256:e07036ca12b3c24331f83ab787f21cc2dbf3631813a1631e63e40897c69a3f21", size = 65716, upload-time = "2025-09-18T13:06:30.581Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3e/af/3e990d8d4002bbc9342adb4facd59506e653da93b2417de0fa6027cb86b1/evaluate-0.4.6-py3-none-any.whl", hash = "sha256:bca85bc294f338377b7ac2f861e21c308b11b2a285f510d7d5394d5df437db29", size = 84069, upload-time = "2025-09-18T13:06:29.265Z" },
+]
+
+[[package]]
+name = "evo2"
+version = "0.5.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "biopython" },
+    { name = "huggingface-hub" },
+    { name = "torch" },
+    { name = "vtx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/05/7b/0a5dbf9abfa8b067fd0a3ce63cc1cd161de7226f3f12c78cce7be5051fbf/evo2-0.5.5.tar.gz", hash = "sha256:54c3ce2cfcc03b80ce50fc99c4ae788d897f0863717bc11d1353ede322c64ecc", size = 45439, upload-time = "2026-03-13T19:31:49.16Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/28/53/c06bb22f78388e547169be8d0abf5768ba7316decbbb6e520ed1cce57a07/evo2-0.5.5-py3-none-any.whl", hash = "sha256:162e87a97b9e0cfdc3966e4032541ca7ddf3e3d14efea06ee41ac3bf57528c13", size = 44881, upload-time = "2026-03-13T19:31:47.91Z" },
 ]
 
 [[package]]
@@ -4343,6 +4360,21 @@ sdist = { url = "https://files.pythonhosted.org/packages/5e/da/6eee1ff8b6cbeed47
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/23/a5bbd9600dd607411fa644c06ff4951bec3a4d82c4b852374024359c19c0/uvicorn-0.44.0-py3-none-any.whl", hash = "sha256:ce937c99a2cc70279556967274414c087888e8cec9f9c94644dfca11bd3ced89", size = 69425, upload-time = "2026-04-06T09:23:21.524Z" },
 ]
+
+[[package]]
+name = "vtx"
+version = "1.0.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "einops" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pyyaml" },
+    { name = "rich" },
+    { name = "torch" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/91/20/4af95a064a75bf62fcc8128a06100a91928e473e649bd8d283f3e10b626d/vtx-1.0.8.tar.gz", hash = "sha256:cce1f595e391819702219c924e76c99c3facb661730cb5c33dea6dc1ffbffe16", size = 26363808, upload-time = "2026-03-03T22:43:41.658Z" }
 
 [[package]]
 name = "waitress"
