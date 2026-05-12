@@ -5,7 +5,7 @@ head_learning_rate: null
 gradient_accumulation_steps: 1
 metric_average: macro
 warmup_steps: 50 #following dnabert2 paper
-epochs: 3
+epochs: 3 # default values overwritten by task, all values that appear both here and in tasks are default 
 train_bs: 16 # bs = batch_size
 eval_bs: 16
 weight_decay: 0.01
