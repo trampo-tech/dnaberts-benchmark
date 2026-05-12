@@ -48,8 +48,8 @@ for task in $TASKS; do
 done
 """ 
 
-task_check_cuda = """ uv run python -c "import torch; print(f'cu{torch.version.cuda.replace(".","")[:3]}')" """
-task_check_torch = """ uv run python -c "import torch; print(torch.__version__[:3])" """ 
+check_cuda = "uv run python -c \"import torch; print(f'cu{torch.version.cuda.replace(\".\",\"\")[:3]}')\""
+check_torch = "uv run python -c \"import torch; print(torch.__version__[:3])\""
 
 download-bend = "uv run python scripts/download_bend.py"
 download-bend-variants = "uv run python scripts/prepare_bend_variant_effects.py genome_fasta=<path>"
