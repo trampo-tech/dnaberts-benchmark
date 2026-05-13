@@ -5,6 +5,7 @@ max_length: 8192
 import_modules: []
 label_mode: class_index
 layer_name: "blocks.18.mlp.l3"
+
 # LoRA config
 use_lora: true
 lora_r: 16
@@ -14,38 +15,36 @@ lora_target_modules: "mlp.l1,mlp.l2,mlp.l3,out_filter_dense"
 learning_rate: 1e-4
 head_learning_rate: 3e-4
 
-# EVO 2 uses a byte-level tokenizer (≈ 1 token / bp vs ≈ 3-6 for k-mer).
-# Per-task overrides take priority over the data config defaults.
-token_max_length_overrides:
-  prom_core_all: 70
-  splice_reconstructed: 400
-  human_tf_0: 101
-  mouse_0: 101
-  EPI_HUVEC: 3000
-  emp_H3K4me1: 500
-  fungi_species_20: 10000
-
-# Smaller batches to fit the 1B model in 12-24 GB VRAM.
-# Higher gradient accumulation keeps effective batch size similar.
+# EVO 2 byte-level tokenizer: ≈ 1 token / bp (vs ≈ 3-6 for k-mer).
+# Model-level defaults override gue.yaml / train.yaml.
+token_max_length: null  # resolved per-task below
 train_bs: 4
 eval_bs: 8
 gradient_accumulation_steps: 8
 
-train_bs_overrides:
-  EPI_HUVEC: 1
-  fungi_species_20: 1
-
-eval_bs_overrides:
-  EPI_HUVEC: 1
-  fungi_species_20: 1
-  emp_H3K4me1: 4
-  splice_reconstructed: 4
-
-gradient_accumulation_steps_overrides:
-  prom_core_all: 8
-  splice_reconstructed: 8
-  human_tf_0: 8
-  mouse_0: 4
-  EPI_HUVEC: 16
-  emp_H3K4me1: 8
-  fungi_species_20: 32
+# Per-task overrides take priority over model-level defaults above.
+# Any key handled by _resolve() in evo2.py can appear here.
+tasks:
+  prom_core_all:
+    token_max_length: 70
+  splice_reconstructed:
+    token_max_length: 400
+    eval_bs: 4
+  human_tf_0:
+    token_max_length: 101
+  mouse_0:
+    token_max_length: 101
+    gradient_accumulation_steps: 4
+  EPI_HUVEC:
+    token_max_length: 3000
+    train_bs: 1
+    eval_bs: 1
+    gradient_accumulation_steps: 16
+  emp_H3K4me1:
+    token_max_length: 500
+    eval_bs: 4
+  fungi_species_20:
+    token_max_length: 10000
+    train_bs: 1
+    eval_bs: 1
+    gradient_accumulation_steps: 32

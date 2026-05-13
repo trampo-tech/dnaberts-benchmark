@@ -277,19 +277,9 @@ def run(cfg: DictConfig) -> None:
     Evo2 = _import_evo2()
 
     # -- Resolve early values ------------------------------------------------
+    task_name = getattr(cfg.data, "task", None)
     num_labels = int(
         getattr(cfg.data, "num_labels", None) or cfg.train.num_labels
-    )
-
-    # EVO 2 uses byte-level tokenizer (≈ 1 token / bp), vs k-mer (≈ 3-6 bp / token).
-    # Prefer the model's per-task override map, then the data config defaults.
-    task_name = getattr(cfg.data, "task", None)
-    evo2_overrides = getattr(cfg.model, "token_max_length_overrides", {}) or {}
-    token_max_length = int(
-        (task_name and evo2_overrides.get(task_name))
-        or getattr(cfg.data, "token_max_length", 0)
-        or getattr(cfg.data, "max_length", 0)
-        or cfg.model.max_length
     )
 
     # -- Load model (once, reuse for tokenization and training) --------------
@@ -398,51 +388,41 @@ def run(cfg: DictConfig) -> None:
     run_id = build_run_id(experiment, cfg.model.name)
 
     # -- Training setup -------------------------------------------------------
-    def _evo2_override(key: str, fallback):
-        """Resolve a training parameter with EVO-2-specific override chain:
-        1. cfg.model.{key}_overrides[task]  (per-task, byte-level tokenizer)
-        2. cfg.model.{key}                   (model-level EVO 2 default)
-        3. _resolve_train_override           (data config → train config)
-        """
-        overrides = getattr(cfg.model, f"{key}_overrides", {}) or {}
-        if task_name and task_name in overrides:
-            return int(overrides[task_name])
+    # Single override chain for every training param:
+    #  1. cfg.model.tasks[task][key]   per-task EVO 2 value
+    #  2. cfg.model.{key}              model-level EVO 2 default
+    #  3. _resolve_train_override      gue.yaml → train.yaml
+    def _resolve(key, type_fn=int, default=None):
+        tasks = getattr(cfg.model, "tasks", {}) or {}
+        if task_name and task_name in tasks and key in tasks[task_name]:
+            return type_fn(tasks[task_name][key])
         model_val = getattr(cfg.model, key, None)
         if model_val is not None:
-            return int(model_val)
-        return int(_resolve_train_override(cfg, key, fallback))
+            return type_fn(model_val)
+        return type_fn(_resolve_train_override(cfg, key, default))
 
-    train_bs = _evo2_override("train_bs", cfg.train.train_bs)
-    eval_bs = _evo2_override("eval_bs", cfg.train.eval_bs)
-    gradient_accumulation_steps = _evo2_override(
-        "gradient_accumulation_steps", 1
-    )
-    epochs = int(_resolve_train_override(cfg, "epochs", cfg.train.epochs))
-    head_lr = (
-        float(_resolve_train_override(cfg, "head_learning_rate", 0) or 0)
-        or None
-    )
-    warmup_steps = _resolve_train_override(cfg, "warmup_steps", None)
+    train_bs = _resolve("train_bs", int, cfg.train.train_bs)
+    eval_bs = _resolve("eval_bs", int, cfg.train.eval_bs)
+    gradient_accumulation_steps = _resolve("gradient_accumulation_steps", int, 1)
+    token_max_length = _resolve("token_max_length", int, cfg.model.max_length)
+    epochs = _resolve("epochs", int, cfg.train.epochs)
+    learning_rate = _resolve("learning_rate", float, cfg.train.learning_rate)
+    head_lr = _resolve("head_learning_rate", float, 0) or None
+    warmup_steps = _resolve("warmup_steps", int, None) or None
+
+    cfg.train.learning_rate = learning_rate
     cfg.train.gradient_accumulation_steps = gradient_accumulation_steps
 
-    # Model-level LR overrides (LoRA typically needs higher LR than full FT)
-    model_lr = getattr(cfg.model, "learning_rate", None)
-    if model_lr is not None:
-        cfg.train.learning_rate = float(model_lr)
-    model_head_lr = getattr(cfg.model, "head_learning_rate", None)
-    if model_head_lr is not None:
-        head_lr = float(model_head_lr)
+    eval_steps = _resolve("eval_steps", int, None)
+    if eval_steps:
+        cfg.train.eval_steps = eval_steps
 
-    eval_steps = _resolve_train_override(cfg, "eval_steps", None)
-    if eval_steps is not None:
-        cfg.train.eval_steps = int(eval_steps)
+    save_steps = _resolve("save_steps", int, None)
+    if save_steps:
+        cfg.train.save_steps = save_steps
 
-    save_steps = _resolve_train_override(cfg, "save_steps", None)
-    if save_steps is not None:
-        cfg.train.save_steps = int(save_steps)
-
-    if warmup_steps is not None:
-        cfg.train.warmup_steps = int(warmup_steps)
+    if warmup_steps:
+        cfg.train.warmup_steps = warmup_steps
 
     training_args = _build_training_args(
         cfg, outdir, run_id, train_bs, eval_bs, epochs
