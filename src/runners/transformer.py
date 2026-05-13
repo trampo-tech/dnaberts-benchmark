@@ -259,6 +259,16 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any =
             lora_dropout=float(cfg.model.lora_dropout),
             target_modules=target_modules,
         )
+    elif getattr(cfg.model, "frozen_backbone", False):
+        head_names = {"classifier", "cls", "score"}
+        for name, param in model.named_parameters():
+            if any(h in name for h in head_names):
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
+        trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in model.parameters())
+        print(f"  Frozen backbone: {trainable:,} / {total:,} trainable parameters")
 
     return model, model_load_info, label_mode
 
