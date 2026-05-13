@@ -787,6 +787,9 @@ dev = [
     { name = "ipywidgets" },
     { name = "taskipy" },
 ]
+evo2 = [
+    { name = "evo2" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -808,7 +811,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.8.0" },
     { name = "tf-keras", specifier = ">=2.20.1" },
     { name = "tokenizers", specifier = ">=0.22.2" },
-    { name = "transformers", specifier = "==4.57.1" },
+    { name = "transformers", specifier = ">=4.57.1" },
 ]
 
 [package.metadata.requires-dev]
@@ -817,6 +820,7 @@ dev = [
     { name = "ipywidgets", specifier = ">=8.1.8" },
     { name = "taskipy", specifier = ">=1.14.1" },
 ]
+evo2 = [{ name = "evo2", specifier = ">=0.5.5" }]
 
 [[package]]
 name = "docker"
