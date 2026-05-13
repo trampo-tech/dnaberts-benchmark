@@ -3,7 +3,7 @@ name = "dnaberts-benchmarks"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11" 
 dependencies = [
     "accelerate>=1.13.0",
     "biopython>=1.87",
@@ -22,9 +22,7 @@ dependencies = [
     "scikit-learn>=1.8.0",
     "tf-keras>=2.20.1",
     "tokenizers>=0.22.2",
-    "transformers==4.57.1",
-    # evo2 requires flash-attn to be installed separately first:
-    #   pip install flash-attn==2.8.0.post2 --no-build-isolation
+    "transformers>=4.57.1",
     "evo2>=0.5.5",
 ]
 
