@@ -167,7 +167,7 @@ remains frozen.
 **Quick test:**
 
 ```bash
-uv run python src/main.py data=gue data.task=prom_core_all model=evo2 seed=42
+uv run python src/main.py data=gue data.task=prom_core_all model=evo2 seed=21194
 ```
 
 
@@ -239,49 +239,15 @@ uv run python scripts/kmer_variant_baseline.py \
   data=bend_variant_disease
 ```
 
-### 5. Prepare the histone dataset
-
-```bash
-uv run python scripts/prepare_bend_histone.py \
-  genome_fasta=/path/to/GRCh38.primary_assembly.genome.fa
-```
-
-Useful options:
-
-```bash
-uv run python scripts/prepare_bend_histone.py \
-  genome_fasta=/path/to/GRCh38.primary_assembly.genome.fa \
-  window_size=1024 \
-  stride=1024 \
-  'chromosomes=[chr22]'
-```
-
-This writes:
-
-- `data/processed/bend_histone/train.csv`
-- `data/processed/bend_histone/validation.csv`
-- `data/processed/bend_histone/test.csv`
-
-### 6. Train the histone model
-
-```bash
-uv run python src/main.py model=dnabert2_histone data=bend_histone train=bend_default
-```
-
-`train=bend_default` is required for the BEND histone task because the metric
-and checkpoint settings differ from the default GUE training config.
 
 ## Tracking Outputs
 
 Each run writes:
-- **Run summary JSON:** `runs/<experiment>/<model>/run_summary.json`
 - **GUE leaderboard CSV (append):** `reports/benchmark_results.csv`
 - **BEND leaderboard CSV (append):** `reports/benchmark_results_bend.csv`
-- **BEND variant distances:** `reports/variant_effect_distances_<experiment>.csv`
 - **MLflow run data:** `mlruns/`
 
-GUE tracks F1, accuracy, MCC, and ROC-AUC. BEND tracks task-specific metrics
-such as Spearman rho, AUROC, macro AUROC, and per-track AUROC.
+GUE tracks F1, accuracy, MCC, and ROC-AUC. BEND variant computes AUROC.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

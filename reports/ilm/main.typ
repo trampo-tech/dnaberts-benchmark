@@ -13,26 +13,31 @@
 
 = Visão Geral
 
-O projeto #text(style: "italic")[dnaberts-benchmark] é um framework multi-tarefa para avaliação de modelos de fundação genômicos, utilizando tarefas do benchmark GUE #footnote[Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark for Multi-Species Genomes", 2024.] e tarefas selecionadas do BEND #footnote[Marin et al., "BEND: Benchmarking DNA Language Models on Biologically Meaningful Tasks", 2024.]. O pipeline é gerenciado via Hydra, com tracking de experimentos no MLflow e exportação automática
-de leaderboards em CSV.
+O projeto consiste em um benchmark multi-tarefa para avaliação de modelos de fundação genômicos, utilizando tarefas do benchmark GUE #footnote[Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark for Multi-Species Genomes", 2024.] e tarefas selecionadas do BEND #footnote[Marin et al., "BEND: Benchmarking DNA Language Models on Biologically Meaningful Tasks", 2024.]. 
 
-Atualmente, dois modelos foram avaliados em todas as tarefas GUE e nas tarefas de Variant Effect do BEND, totalizando 28 execuções nas RTX 4090 (7 tarefas GUE #sym.times 2 modelos #sym.times 2 sementes). As execuções foram realizadas com dois seeds distintos (21194 e 63194) para avaliar a estabilidade dos resultados.
+O pipeline é gerenciado via Hydra, com tracking de experimentos no MLflow e exportação automática de leaderboards em CSV.
 
-= Última reunião
+Atualmente, dois modelos foram avaliados em todas as tarefas GUE e nas tarefas de Variant Effect do BEND, totalizando 24 execuções nas RTX 4090 (5 tarefas GUE #sym.times 2 modelos #sym.times 2 sementes + 2 tarefas BEND #sym.times 2 modelos). As execuções foram realizadas com dois seeds distintos (21194 e 63194) para avaliar a estabilidade dos resultados.
 
-Analisamos outros benchmarks e como foram feitos:
-Fundamentalmente o que fizemos não é grande novidade, apenas recriamos resultados até então. O fator novidade seria o comparativo com o modelo Evo2, que em seu paper original não se comparou aos modelos que utlizamos aqui e nem utilizou tasks da comunidade.
-Ademais, se adicionarmos o novo dataset conforme conversado teríamos outro fator novo. Acredito que temos um potencial interessante de comparar e contrastar modelos, no entanto agora temos uma limitação de tempo e isso que nos preocupa. Discussões sobre seguem ao final deste relatório.
-Falando um pouco da metodologia que estamos utilizando, nossas métricas seguem outros benchmarks na área. As tarefas são provenientes de benchmarks publicamente disponíveis.
+Fundamentalmente o que fizemos não é grande novidade, apenas recriamos resultados até então. O fator novidade seria o comparativo com o modelo Evo2, que em seu paper original não se comparou aos modelos que utilizamos aqui e nem utilizou tasks da comunidade.
 
+Ademais, outro ponto é a adição de um novo dataset providenciado pela equipe do professor Roberto H., que traria dados não vistos antes com validação de especialistas da área genômica.
 
-Succintamente, o objetivo aqui é definirmos uma rota para chegarmos em um resultado satisfatório para a disciplina.
+= Modelos
+
+== DNABERT-2 (117M)
+
+O DNABERT-2 #footnote[Zhou et al., "DNABERT-2: Efficient Foundation Model and Benchmark for Multi-Species Genomes", 2024.] é um modelo transformer encoder-only baseado na arquitetura BERT, treinado com o objetivo de masked language modeling (MLM) em sequências de DNA multi-espécies. Utiliza o tokenizador Byte Pair Encoding (BPE) com vocabulário de 4096 tokens para lidar eficientemente com sequências longas, substituindo a tokenização por k-mers utilizada na versão anterior. Conta com 117 milhões de parâmetros, 12 camadas transformer e dimensão de hidden size de 768. Em nosso benchmark, utilizamos fine-tuning completo do modelo em todas as tarefas.
+
+== Nucleotide Transformer v2 (500M multi-espécies)
+
+O Nucleotide Transformer v2 #footnote[Dalla-Torre et al., "The Nucleotide Transformer: Building and Evaluating Robust Foundation Models for Human Genomics", 2023.] pertence a uma família de modelos transformer treinados em genomas de mais de 850 espécies. A versão utilizada (500M multi-species) possui 24 camadas, hidden size de 1024 e 500 milhões de parâmetros. Diferentemente do DNABERT-2, o tokenizador opera em nível de nucleotídeo único (6-mers não sobrepostos). Em nosso benchmark, utilizamos fine-tuning via Low-Rank Adaptation (LoRA) com r=8, alpha=16 e dropout de 0.05, aplicado nas projeções query e value das camadas de atenção, seguindo a configuração do paper original.
 
 = Tarefas Implementadas
 
 == GUE (Genome Understanding Evaluation)
 
-As 7 tarefas do benchmark GUE abrangem diferentes problemas biológicos, comprimentos de sequência e números de classes:
+As 5 tarefas do benchmark GUE selecionadas abrangem diferentes problemas biológicos, comprimentos de sequência e números de classes:
 
 #figure(
   table(
@@ -42,14 +47,24 @@ As 7 tarefas do benchmark GUE abrangem diferentes problemas biológicos, comprim
     [`splice_reconstructed`], [Sítio de splicing], [400 bp], [3], [5],
     [`human_tf_0`], [Ligação de TF (humano)], [101 bp], [2], [3],
     [`mouse_0`], [Ligação de TF (camundongo)], [101 bp], [2], [10],
-    [`EPI_HUVEC`], [Marcas epigenéticas], [3000 bp], [2], [10],
-    [`emp_H3K4me1`], [Modificação de histonas], [500 bp], [2], [5],
-    [`fungi_species_20`], [Classificação de espécies], [10000 bp], [20], [10],
+    [`emp_H3K4me1`], [Marcas epigenéticas (levedura)], [500 bp], [2], [5],
   ),
   caption: [Tarefas GUE implementadas e suas configurações de treinamento.]
 ) <tab:gue_tasks>
 
-Todas as tarefas utilizam fine-tuning completo para o DNABERT-2 e LoRA para o Nucleotide Transformer v2 (500M multi-espécies). O treinamento emprega AdamW com learning rate de 3e-5, early stopping com paciência de 10 avaliações e fp16 mixed precision.
+=== Descrição das Tarefas
+
+- *Core promoter detection (`prom_core_all`, humano)*: Predição da região promotora central (core promoter), a região mais próxima ao transcription start site (TSS). A janela de contexto é de -34 a +35 bp ao redor do TSS, tornando-a mais desafiadora devido ao contexto reduzido. O dataset combina promotores TATA e não-TATA do Eukaryotic Promoter Database (EPDnew). Sequências negativas são construídas com conteúdo GC equivalente fora de regiões promotoras.
+
+- *Splice site prediction (`splice_reconstructed`, humano)*: Predição de sítios doadores e aceptores de splicing no genoma humano. O dataset original (Wang et al., 2019) contém sequências de 400 bp extraídas do genoma de referência humano Ensembl GRCh38. Como modelos existentes atingem performance quase perfeita no dataset original, a versão reconstruída adiciona exemplos adversariais iterativamente (falsos positivos do hold-out set) para aumentar a dificuldade.
+
+- *Transcription factor binding (`human_tf_0`)*: Predição de sítios de ligação de fatores de transcrição (TF) no genoma humano. Utiliza dados dos experimentos ENCODE ChIP-seq (690 experimentos, 161 TFs em 91 linhagens celulares humanas). Extrai-se uma região de 101 bp ao redor do centro de cada pico como classe positiva, com sequências negativas não sobrepostas de mesmo comprimento e conteúdo GC. 
+
+- *Transcription factor binding (`mouse_0`)*: Análogo ao `human_tf_0`, utilizando dados de ENCODE ChIP-seq de camundongo (78 experimentos). Sequências negativas são geradas por dinucleotide shuffling preservando frequências relativas. Demais configurações idênticas à versão humana.
+
+- *Epigenetic marks prediction (`emp_H3K4me1`, levedura)*: Predição de marcas epigenéticas em levedura, especificamente a modificação de histona H3K4me1. Modificações epigenéticas influenciam a expressão gênica sem alterar a sequência de DNA. Os 10 datasets originais foram divididos em treino/validação/teste na proporção 8:1:1.
+
+Todas as tarefas utilizam fine-tuning completo para o DNABERT-2 e LoRA para o Nucleotide Transformer v2 (500M multi-espécies). O treinamento emprega AdamW com learning rate de 3e-5 e fp16 mixed precision.
 
 == BEND (Variant Effects)
 
@@ -65,6 +80,12 @@ As tarefas de efeito de variante do BEND utilizam a abordagem zero-shot: calcula
   caption: [Tarefas de variante do BEND implementadas.]
 ) <tab:bend_tasks>
 
+=== Descrição das Tarefas
+
+- *Noncoding variant effects — Expression (`bend_variant_expression`)*: Predição de efeito de variantes de nucleotídeo único (SNPs) na expressão gênica. Utiliza o dataset DeepSEA (Zhou & Troyanskaya, 2015) com SNPs funcionais (eQTLs do GRASP) e SNPs de fundo genético (1000 Genomes Project). São 98.221 variantes sem efeito e 8.000 com efeito. O contexto de embedding é de 512 bp ao redor da variante.
+
+- *Noncoding variant effects — Disease (`bend_variant_disease`)*: Predição de patogenicidade de SNPs não-codificantes a partir do ClinVar. Contém 274.399 variantes benignas e 21.524 patogênicas. Filtram-se variantes codificantes e mitocondriais. O contexto de embedding também é de 512 bp.
+
 = Comparação de Hiperparâmetros
 
 As principais discrepâncias comparando com os códigos presentes no Github são:
@@ -77,32 +98,7 @@ As principais discrepâncias comparando com os códigos presentes no Github são
 - *Early stopping*: Os scripts de referência não utilizam early stopping,
   treinando pelo número fixo de épocas. Nossa configuração pode
   interromper o treinamento prematuramente, especialmente nas tarefas
-  `mouse_0`, `emp_H3K4me1` e `EPI_HUVEC`.
-
-
-  === Early Stopping
-
-  #figure(
-    table(
-      columns: 3,
-      table.header[*Tarefa*][*DNABERT-2*][*NT v2 500M*],
-      [`prom_core_all`], [3 / 4], [4 / 4],
-      [`splice_reconstructed`], [5 / 5], [5 / 5],
-      [`mouse_0`], [10 / 10], [10 / 10],
-      [`human_tf_0`], [3 / 3], [3 / 3],
-      [`EPI_HUVEC`], [5 / 10], [5 / 10],
-      [`emp_H3K4me1`], [4 / 5], [4 / 5],
-      [`fungi_species_20`], [3 / 10], [2 / 10],
-    ),
-    caption: [Numero de epocas executadas por tarefa antes da parada do treinamento (epocas executadas / total configurado).]
-  ) <tab:early_stopping>
-
-
-No entanto, no artigo original essas foram as informações passadas:
-
-#blockquote[
-This section presents the hyperparameters we used in the fine-tuning stage on each model. Table 7 shows the number of training steps we used for each task. We use AdamW (Loshchilov & Hutter, 2019) as optimizer. We keep most of the other hyperparameters the same for all the models across all the datasets, including a batch size of 32, a warmup step of 50, and a weight decay of 0.01. For DNABERT and DNABERT-2, we perform standard fine-tuning with a learning rate of 3e-5, while for the Nucleotide Transformers, we perform parameter efficient fine-tuning (PEFT) using Low-Rank Adaptation (LoRA) with a learning rate of 1e-4, a LoRA alpha of 16, a LoRA dropout of 0.05, and a LoRA r of 8. The hyperparameters are selected based on grid searches over commonly used ones in preliminary experiments [...]
-]
+  `mouse_0` e `emp_H3K4me1`.
 
 = Resultados
 
@@ -115,13 +111,11 @@ NT-2500M-multi (modelo de maior capacidade da família NT) como referência.
   table(
     columns: 6,
     table.header[*Tarefa*][*DNABERT-2*][*DNABERT-2 (Ref.)*][*NT v2 500M*][*NT 2500M (Ref.)*][*#sym.delta*],
-    [`prom_core_all`],   [0.6680], [0.6937], [0.6916], [0.7033], [#sym.delta = -0.0257 / -0.0117],
-    [`splice_reconstructed`], [0.8563], [0.8499], [0.8998], [0.8935], [#sym.delta = +0.0064 / +0.0063],
-    [`human_tf_0`],      [0.6860], [0.7199], [0.6785], [0.6664], [#sym.delta = -0.0339 / +0.0121],
+    [`prom_core_all`],   [0.6741], [0.6937], [0.6916], [0.7033], [#sym.delta = -0.0196 / -0.0117],
+    [`splice_reconstructed`], [0.8643], [0.8499], [0.8998], [0.8935], [#sym.delta = +0.0144 / +0.0063],
+    [`human_tf_0`],      [0.6930], [0.7199], [0.6785], [0.6664], [#sym.delta = -0.0269 / +0.0121],
     [`mouse_0`],         [0.6348], [0.5676], [0.6275], [0.6331], [#sym.delta = +0.0672 / -0.0056],
-    [`emp_H3K4me1`],     [0.4898], [0.5052], [0.5334], [0.5530], [#sym.delta = -0.0154 / -0.0196],
-    [`EPI_HUVEC`],       [0.1465], [—],      [0.3151], [—],      [Ver discussão abaixo],
-    [`fungi_species_20`],[0.8558], [0.9304], [0.9245], [0.9285], [#sym.delta = -0.0746 / -0.0040],
+    [`emp_H3K4me1`],     [0.5095], [0.5052], [0.5334], [0.5530], [#sym.delta = +0.0043 / -0.0196],
   ),
   caption: [Resultados GUE na RTX 4090 (melhor semente) vs. referência da literatura. O #sym.delta indica DNABERT-2 (Nosso #sym.minus Ref.) / NT (Nosso #sym.minus Ref.).]
 ) <tab:gue_results>
@@ -130,76 +124,65 @@ NT-2500M-multi (modelo de maior capacidade da família NT) como referência.
 
 #figure(
   table(
-    columns: 5,
-    table.header[*Tarefa*][*DNABERT-2*][*DNABERT-2 (Ref.)*][*#sym.delta*][*Nota*],
-    [Expressão], [0.4903], [0.49], [+0.0003], [Resultado alinhado com a literatura],
-    [Doença],    [0.5440], [0.51], [+0.0340], [Ligeiramente acima da referência],
+    columns: 4,
+    table.header[*Tarefa*][*DNABERT-2*][*DNABERT-2 (Ref.)*][*#sym.delta*],
+    [Expressão], [0.4903], [0.49], [+0.0003],
+    [Doença],    [0.5440], [0.51], [+0.0340],
   ),
-  caption: [Resultados BEND (variant effects) na RTX 4090 vs. referência.]
+  caption: [Resultados BEND (variant effects) com DNABERT-2 vs. referência. Resultados do Nucleotide Transformer pendentes.]
 ) <tab:bend_results>
-
-= Discussão: Tarefa EPI
-
-A tarefa `EPI_HUVEC` (marcas epigenéticas em células HUVEC, 3000 bp) apresentou desempenho consideravelmente abaixo do esperado, com MCC máximo de 0.3151 (NT) e 0.1465 (DNABERT-2). No seed 21194, o DNABERT-2 chegou a obter MCC = 0.0, indicando colapso total da classificação. As tarefas não conseguem converger mesmo com todas as épocas. (Mostrar os gráficos de treinamento `gue_EPI_HUVEC__zhihan1996_DNABERT-2-117M__20260512T132922Z`)
-
-Tivemos problemas com resultados de outras tarefas do conjunto Enhancer Promoter Interaction, a `EPI_HUVEC` é a segunda tarefa que tentamos fazer funcionar. A principal problemática é que os autores do paper original não publicaram nenhum hiperparâmetro (Ver tabela de hiperparâmetros para comparativo) das tarefas do dataset GUE+ (Tarefas EPI, Fungi e Covid). Outros usuários constataram dificuldades em replicar resultados das tarefas EPI e Covid (https://github.com/MAGICS-LAB/DNABERT_2/issues/99 e https://github.com/MAGICS-LAB/DNABERT_2/issues/103).
-
-A questão que fica é como devemos proceder nessa tarefa? É uma tarefa interessante dado seu comprimento e natureza, no entano acreditamos que insistir nela talvez seja mau uso de nosso tempo, algo que não temos muito.
 
 = Próximos Passos
 
-== Modelo Evo2 nas tarefas GUE
+== Modelo Evo2
 
-Adicionar o modelo Evo2 (Arc Institute)ao benchmark já foi realizado com uma implementação LoRA adaptada de https://github.com/NVIDIA/bionemo-framework/issues/884 utilizando PEFT, não é 100% igual devido à limitações do wrapper PEFT em cima de camadas Lineares da Transformer Engine (TELinear e não nn.Linear)
-Agora falta executá-lo em todas as 7 tarefas GUE. Este modelo utiliza uma arquitetura diferente (Striped Hyena) e foi treinado em uma escala massiva de genomas.
+O Evo2 #footnote[Brixi et al., "Evo 2: Genome modeling and design across all domains of life", 2025.] é um modelo de fundação genômico desenvolvido pelo Arc Institute em colaboração com a NVIDIA, treinado em mais de 128 mil genomas abrangendo todos os domínios da vida. Diferentemente dos modelos transformer tradicionais, o Evo2 utiliza a arquitetura Striped Hyena, que combina operadores de convolução híbridos (Hyena) com atenção multi-head para processamento eficiente de sequências extremamente longas (até 1 milhão de nucleotídeos). O modelo conta com versões de 1B, 7B, 20B e 40B de parâmetros, sendo que as versões de 1B e 7B são mais viavéis dado nosso hardware. Outro detalhe importante é a diferença no tokenizador, que opera em nível de nucleotídeo único.
+=== Adaptação LoRA
 
-=== Possíveis riscos
-O modelo evo2 é significativamente maior que os outros modelos que estamos lidando, a utilização de LoRA é vital para podermos treinar algo e ainda é possível que ocorram erros entre a integração do PEFT com o modelo. Assim, uma direção alternativa que podemos tomar seria comparar esse modelo em um formato zeroshot nas tarefas treinando apenas o classificador, uma vez que nosos benchmark é limitado a hardware de nível consumidor.
+Implementamos uma adaptação LoRA para o Evo2 baseada nas discussões e código do BioNEMO #footnote[BioNEMO Framework, NVIDIA. https://github.com/NVIDIA/bionemo-framework/issues/884]. A integração não é trivial pois as camadas lineares do Evo2 utilizam Transformer Engine (TELinear, classes `te.Linear`) em vez de `nn.Linear` padrão, o que impõe limitações ao wrapper PEFT da HuggingFace. A solução atual contorna essa limitação utilizando hooks manuais ou reimplementação parcial das camadas para compatibilidade com LoRA.
 
-== Modelos anteriores na tarefa de Histone (BEND)
+=== Resultados Preliminares
 
-Executar DNABERT-2 e Nucleotide Transformer na tarefa de modificação de
-histonas do BEND (`bend_histone`). A implementação atual foi adaptada da original do paper BEND e utiliza uma CNN como header. Para comparações com os outros modelos acreditamos melhor trocar essa head por uma camada linear simples como nas outras tarefas.
+--- TODO: Adicionar resultados preliminares do Evo2 nas tarefas GUE (MCC) assim que disponíveis. ---
 
 === Possíveis riscos
-Essa adaptação pode levar a uma pior performance dos modelos do que foi reportado pelos criadores do BEND
 
-== Modelo Evo2 nas tarefas BEND
+O Evo2 é significativamente maior que os outros modelos utilizados (1B--7B parâmetros vs. 117M--500M). A utilização de LoRA é vital para viabilizar o treinamento em hardware de nível consumidor. Ainda é possível que ocorram erros de integração entre o PEFT e o Transformer Engine. Uma direção alternativa seria comparar o Evo2 em formato zero-shot treinando apenas o classificador linear (probe), limitando o custo computacional ao embedding das sequências.
 
-Após a integração do Evo2 no pipeline GUE, estender o suporte para as
-tarefas BEND:
+== Execuções sem Fine-Tuning
 
-- *Variant effects (zero-shot)*: Adaptar o runner `variant_effect_zeroshot.py`
-  para extrair embeddings do Evo2 e calcular distâncias de cosseno.
-- *Histone modification*: Criar config `model/evo2_histone.yaml` e executar
-  fine-tuning com decodificador linear.
-- Executar o sweep com 2 sementes e comparar com os resultados atuais.
+Na última reunião (11/05) foi levantada a questão de executarmos os modelos sem fine-tuning para estabelecer uma baseline comparativa. Considerando o estado atual da pipeline, esta é uma tarefa de implementação simples, custando apenas o tempo de execução.
 
 
-== Adição do dataset
-Na última reunião e em discussões subsequentes foi comentado que poderíamos adicionar um novo dataset para execuções, proveniente da equipe. Algumas dúvidas para resolvermos:
-- Qual a natureza desse dataset?
-- Quantos ajustes teriam de ser feitos para este dataset ter formato sequência:label. Ou seja o quão cru esse dataset é?
-- Esse dataset já foi testado com algum modelo? Para termos uma noção do quão difícil ele é para os modelos
+== Adição de Novo Dataset
 
-==== Possíveis riscos
-Para a adição do dataset o maior problema seria se precisarmos realizar uma grande quantidade de ajustes para formatá-lo, uma vez que nos falta conhecimentos da área.
+Discutiu-se a inclusão de um novo dataset proveniente da equipe para enriquecer o benchmark com uma tarefa adicional. Esta seção serve como esqueleto para acomodar esta tarefa futura.
 
-== Riscos gerais
-Conforme mencionado pelo professor Andrey, é possível que a máquina que estamos utilizando para rodar os experimentos seja ocupada por outra pessoa repentinamente. Assim, gostaria de entender melhor como seria para acessarmos a máquina do professor Scalabrin e que tipo de preparações teríamos de ter. Gostaríamos de ter ela como um plano B de emergência, mas não queremos importunar o professor.
+=== Descrição da Tarefa
 
-== Execuções sem fine-tuning
-Na última reunião (11/05) o professor Marco perguntou se havíamos executado os modelos sem fine-tuning, não fizemos. No entanto, considerando o atual estado da pipeline seria uma tarefa bem simples de ser feita custando praticamente só o tempo de execução. Seria uma proposta para obter mais resultados, acredito que compute não seria tanto problema já que apenas o HEAD linear seria treinado.
+--- TODO: Preencher descrição da tarefa (natureza do dataset, espécie, objetivo biológico). ---
+
+=== Formato dos Dados
+
+--- TODO: Descrever formato das sequências (comprimento, tipo de sequência), número de classes, tamanho do dataset (treino/validação/teste). ---
+
+=== Métricas e Baseline
+
+--- TODO: Definir métrica de avaliação e estabelecer baseline (performance trivial, performance de modelo simples). ---
+
+=== Possíveis riscos
+
+O principal risco é o fato de não termos referência da dificuldade da tarefa para modelos de fundação genômicos, o que dificulta a calibração de hiperparâmetros e expectativas de performance.
 
 = Resumo do Status
 
 #figure(
   table(
-    columns: 3,
-    table.header[*Modelo*][*GUE*][*BEND*],
-    [DNABERT-2 (117M)],       [#text(fill: green)[#sym.checkmark] 7/7], [#text(fill: green)[#sym.checkmark] Variantes #text(fill: red)[#sym.circle] Histonas],
-    [NT v2 (500M multi)],     [#text(fill: green)[#sym.checkmark] 7/7], [#text(fill: green)[#sym.checkmark] Variantes #text(fill: red)[#sym.circle] Histonas],
-    [Evo2],                   [#text(fill: red)[#sym.circle] Pendente], [#text(fill: red)[#sym.circle] Pendente],
+    columns: 4,
+    table.header[*Modelo*][*GUE*][*BEND*][w/o Fine Tuning],
+    [DNABERT-2 (117M)],       [#text(fill: green)[#sym.checkmark] 5/5], [#text(fill: green)[#sym.checkmark] Variantes], [#text(fill: red)[#sym.circle] Pendente],
+    [NT v2 (500M multi)],     [#text(fill: green)[#sym.checkmark] 5/5], [#text(fill: green)[#sym.checkmark] Variantes], [#text(fill: red)[#sym.circle] Pendente],
+    [Evo2],                   [#text(fill: red)[#sym.circle] Pendente], [#text(fill: red)[#sym.circle] Pendente], [#text(fill: red)[#sym.circle] Pendente],
   ),
   caption: [Status atual de cobertura do benchmark por modelo e categoria de tarefa.]
 ) <tab:status>
