@@ -269,8 +269,14 @@ def run(cfg: DictConfig) -> None:
     num_labels = int(
         getattr(cfg.data, "num_labels", None) or cfg.train.num_labels
     )
+
+    # EVO 2 uses byte-level tokenizer (≈ 1 token / bp), vs k-mer (≈ 3-6 bp / token).
+    # Prefer the model's per-task override map, then the data config defaults.
+    task_name = getattr(cfg.data, "task", None)
+    evo2_overrides = getattr(cfg.model, "token_max_length_overrides", {}) or {}
     token_max_length = int(
-        getattr(cfg.data, "token_max_length", 0)
+        (task_name and evo2_overrides.get(task_name))
+        or getattr(cfg.data, "token_max_length", 0)
         or getattr(cfg.data, "max_length", 0)
         or cfg.model.max_length
     )
@@ -376,16 +382,32 @@ def run(cfg: DictConfig) -> None:
     run_id = build_run_id(experiment, cfg.model.name)
 
     # -- Training setup -------------------------------------------------------
-    train_bs = int(
-        _resolve_train_override(cfg, "train_bs", cfg.train.train_bs)
+    def _evo2_override(key: str, fallback):
+        """Resolve a training parameter with EVO-2-specific override chain:
+        1. cfg.model.{key}_overrides[task]  (per-task, byte-level tokenizer)
+        2. cfg.model.{key}                   (model-level EVO 2 default)
+        3. _resolve_train_override           (data config → train config)
+        """
+        overrides = getattr(cfg.model, f"{key}_overrides", {}) or {}
+        if task_name and task_name in overrides:
+            return int(overrides[task_name])
+        model_val = getattr(cfg.model, key, None)
+        if model_val is not None:
+            return int(model_val)
+        return int(_resolve_train_override(cfg, key, fallback))
+
+    train_bs = _evo2_override("train_bs", cfg.train.train_bs)
+    eval_bs = _evo2_override("eval_bs", cfg.train.eval_bs)
+    gradient_accumulation_steps = _evo2_override(
+        "gradient_accumulation_steps", 1
     )
-    eval_bs = int(_resolve_train_override(cfg, "eval_bs", cfg.train.eval_bs))
     epochs = int(_resolve_train_override(cfg, "epochs", cfg.train.epochs))
     head_lr = (
         float(_resolve_train_override(cfg, "head_learning_rate", 0) or 0)
         or None
     )
     warmup_steps = _resolve_train_override(cfg, "warmup_steps", None)
+    cfg.train.gradient_accumulation_steps = gradient_accumulation_steps
 
     eval_steps = _resolve_train_override(cfg, "eval_steps", None)
     if eval_steps is not None:
@@ -394,19 +416,6 @@ def run(cfg: DictConfig) -> None:
     save_steps = _resolve_train_override(cfg, "save_steps", None)
     if save_steps is not None:
         cfg.train.save_steps = int(save_steps)
-
-    gradient_accumulation_steps = int(
-        _resolve_train_override(cfg, "gradient_accumulation_steps", 1)
-    )
-    # EVO 2 config can specify a model-level default for grad accumulation
-    model_grad_accum = int(
-        getattr(cfg.model, "gradient_accumulation_steps", 0) or 0
-    )
-    if model_grad_accum > 1:
-        gradient_accumulation_steps = max(
-            gradient_accumulation_steps, model_grad_accum
-        )
-    cfg.train.gradient_accumulation_steps = gradient_accumulation_steps
 
     if warmup_steps is not None:
         cfg.train.warmup_steps = int(warmup_steps)

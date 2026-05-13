@@ -10,4 +10,39 @@ lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.1
 lora_target_modules: "mlp.l1,mlp.l2,mlp.l3,out_filter_dense"
-gradient_accumulation_steps: 4
+
+# EVO 2 uses a byte-level tokenizer (≈ 1 token / bp vs ≈ 3-6 for k-mer).
+# Per-task overrides take priority over the data config defaults.
+token_max_length_overrides:
+  prom_core_all: 70
+  splice_reconstructed: 400
+  human_tf_0: 101
+  mouse_0: 101
+  EPI_HUVEC: 3000
+  emp_H3K4me1: 500
+  fungi_species_20: 10000
+
+# Smaller batches to fit the 1B model in 12-24 GB VRAM.
+# Higher gradient accumulation keeps effective batch size similar.
+train_bs: 4
+eval_bs: 8
+gradient_accumulation_steps: 8
+
+train_bs_overrides:
+  EPI_HUVEC: 1
+  fungi_species_20: 1
+
+eval_bs_overrides:
+  EPI_HUVEC: 1
+  fungi_species_20: 1
+  emp_H3K4me1: 4
+  splice_reconstructed: 4
+
+gradient_accumulation_steps_overrides:
+  prom_core_all: 8
+  splice_reconstructed: 8
+  human_tf_0: 8
+  mouse_0: 4
+  EPI_HUVEC: 16
+  emp_H3K4me1: 8
+  fungi_species_20: 32
