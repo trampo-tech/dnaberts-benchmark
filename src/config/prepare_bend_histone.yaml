@@ -1,7 +1,0 @@
-genome_fasta: ???
-input_dir: data/raw/bend/data/histone_modification
-output_dir: data/processed/bend_histone
-window_size: 1024
-stride: null
-label_span_bp: 512
-chromosomes: null

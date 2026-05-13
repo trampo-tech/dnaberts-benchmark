@@ -1,9 +1,0 @@
-train_csv: data/processed/bend_histone/train.csv
-val_csv: data/processed/bend_histone/validation.csv
-test_csv: data/processed/bend_histone/test.csv
-text_col: sequence
-label_col: labels
-num_labels: 18
-token_max_length: 256
-train_bs: 16
-eval_bs: 16

@@ -22,7 +22,6 @@ RUNNERS = {
     "transformer": "runners.transformer",
     "evo2": "runners.evo2",
     "kmer_logreg": "runners.kmer_logreg",
-    "bend_token_clf": "runners.bend_token_classification",
     "variant_effect_zeroshot": "runners.variant_effect_zeroshot",
 }
 

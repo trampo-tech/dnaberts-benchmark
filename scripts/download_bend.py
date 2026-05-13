@@ -9,7 +9,7 @@ from omegaconf import DictConfig
 
 BASE_LINK = "https://sid.erda.dk/"
 SHARE_ID = "aNQa0Oz2lY"
-SUPPORTED_TASKS = {"variant_effects", "histone_modification", "genomes"}
+SUPPORTED_TASKS = {"variant_effects", "genomes"}
 REDIRECT_PREFIX = f"/share_redirect/{SHARE_ID}/"
 
 

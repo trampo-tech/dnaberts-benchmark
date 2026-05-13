@@ -221,7 +221,7 @@ def _load_and_tokenize(cfg: DictConfig):
 
 
 def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any = None):
-    model, model_load_info = load_model_for_sequence_classification(
+    model = load_model_for_sequence_classification(
         cfg.model.name,
         num_labels=num_labels,
         trust_remote_code=cfg.model.trust_remote_code,
@@ -270,7 +270,7 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any =
             target_modules=target_modules,
         )
 
-    return model, model_load_info, label_mode
+    return model, label_mode
 
 
 def _resolve_train_override(cfg: DictConfig, key: str, default: Any = None) -> Any:
@@ -482,7 +482,7 @@ def run(cfg: DictConfig) -> None:
     tokenized, tokenizer, num_labels, token_max_length = _load_and_tokenize(cfg)
 
     # -- Model ----------------------------------------------------------------
-    model, model_load_info, label_mode = _load_and_configure_model(
+    model, label_mode = _load_and_configure_model(
         cfg, num_labels, tokenizer
     )
 
@@ -554,7 +554,7 @@ def run(cfg: DictConfig) -> None:
                 ),
                 "metric_average": metric_average,
                 "seed": cfg.seed,
-                "fallback_model_wrapper": model_load_info.used_fallback,
+                "fallback_model_wrapper": False,
                 "device": device_name,
             },
         )
@@ -600,8 +600,8 @@ def run(cfg: DictConfig) -> None:
             "error": error_message,
             "experiment": experiment,
             "model_name": cfg.model.name,
-            "model_fallback": model_load_info.used_fallback,
-            "model_fallback_reason": model_load_info.fallback_reason,
+            "model_fallback": False,
+            "model_fallback_reason": None,
             "seed": cfg.seed,
             "epochs": epochs,
             "train_bs": train_bs,
