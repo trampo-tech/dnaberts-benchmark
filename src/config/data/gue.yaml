@@ -26,36 +26,21 @@ tasks:
     train_bs: 32
     eval_bs: 32
     epochs: 10
-  EPI_HUVEC:               # 3000bp, binary, 14k samples — long range
-    num_labels: 2
-    token_max_length: 768
-    train_bs: 4
-    eval_bs: 4
-    epochs: 10
   emp_H3K4me1:            # 500bp, binary, 31k samples
     num_labels: 2
     token_max_length: 128
     train_bs: 16
     eval_bs: 32
+    gradient_accumulation_steps: 2
     epochs: 5
-  fungi_species_20:       # 10000bp, 20-class, 10k samples
-    num_labels: 20
-    token_max_length: 2048
-    train_bs: 1
-    eval_bs: 1
-    epochs: 10
-    eval_accumulation: 32
-    gradient_accumulation_steps: 32
-    head_learning_rate: 3e-4 
 
-# ── resolved from task registry ──────────────────────────────
+
 num_labels: ${data.tasks.${data.task}.num_labels}
 token_max_length: ${data.tasks.${data.task}.token_max_length}
 train_bs: ${data.tasks.${data.task}.train_bs}
 eval_bs: ${data.tasks.${data.task}.eval_bs}
 epochs: ${data.tasks.${data.task}.epochs}
 
-# ── paths & columns ─────────────────────────────────────────
 train_csv: data/processed/leannmlindsey_GUE_${data.task}/train.csv
 val_csv: data/processed/leannmlindsey_GUE_${data.task}/validation.csv
 test_csv: data/processed/leannmlindsey_GUE_${data.task}/test.csv

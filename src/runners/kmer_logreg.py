@@ -162,5 +162,5 @@ def run(cfg: DictConfig) -> None:
     _ = save_run_summary(
         f"runs/{experiment}/{model_name}", summary
     )
-    _ = append_leaderboard_row(cfg.train.leaderboard_csv, summary)
-    print(f"\nAppended to {cfg.train.leaderboard_csv}")
+    _ = append_leaderboard_row(cfg.leaderboard_csv, summary)
+    print(f"\nAppended to {cfg.leaderboard_csv}")

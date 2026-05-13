@@ -1,12 +1,11 @@
 output_root: runs
-leaderboard_csv: ${hydra:runtime.cwd}/reports/benchmark_results.csv
 learning_rate: 3e-5
 head_learning_rate: null 
-gradient_accumulation_steps: 1
+gradient_accumulation_steps: ${oc.select:data.tasks.${data.task}.gradient_accumulation,1}
 metric_average: macro
 warmup_steps: 50 #following dnabert2 paper
-epochs: 3 # default values overwritten by task, all values that appear both here and in tasks are default 
-train_bs: 16 # bs = batch_size
+epochs: 3 # default values overwritten by each task
+train_bs: 16 
 eval_bs: 16
 weight_decay: 0.01
 eval_strategy: steps
@@ -15,9 +14,9 @@ save_total_limit: 1
 logging_steps: 20
 eval_steps: 250
 save_steps: 250
-eval_accumulation_steps: ${oc.select:data.tasks.${data.task}.eval_accumulation,null}
+eval_accumulation_steps: ${oc.select:data.tasks.${data.task}.eval_accumulation,1}
 metric_for_best_model: f1
-early_stopping_patience: 5
+early_stopping_patience: 7
 early_stopping_threshold: 0.0
 fp16: true
 report_to: mlflow 

@@ -5,4 +5,7 @@ defaults:
   - _self_
 
 experiment_name: ${hydra:runtime.choices.data}
+leaderboard_csv: ${hydra:runtime.cwd}/reports/benchmark_results.csv
+save_predictions: false
+tags: {}
 seed: 42

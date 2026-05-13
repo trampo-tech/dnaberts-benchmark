@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 
 def utc_timestamp() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -13,7 +15,9 @@ def utc_timestamp() -> str:
 def resolve_experiment_name(cfg) -> str:
     name = str(cfg.experiment_name)
     if name == "gue" and getattr(getattr(cfg, "data", None), "task", None):
-        return f"gue_{cfg.data.task}"
+        name = f"gue_{cfg.data.task}"
+    if getattr(getattr(cfg, "model", None), "frozen_backbone", False):
+        return f"{name}_frozen"
     return name
 
 
@@ -156,6 +160,47 @@ def append_bend_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:
 
     _write_csv_rows(path, fieldnames, [row])
     return path
+
+
+def save_predictions_csv(output_dir: str, run_id: str, logits: np.ndarray, labels: np.ndarray, num_labels: int) -> Path:
+    out_path = Path(output_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    probs = _softmax(logits)
+    preds = np.argmax(logits, axis=-1)
+    labels_flat = labels.ravel()
+
+    rows = []
+    for i in range(len(labels_flat)):
+        row: dict[str, Any] = {
+            "run_id": run_id,
+            "true_label": int(labels_flat[i]),
+            "predicted_label": int(preds[i]),
+        }
+        for c in range(num_labels):
+            row[f"prob_class_{c}"] = float(probs[i, c])
+        rows.append(row)
+
+    fieldnames = list(rows[0].keys()) if rows else []
+    filepath = out_path / f"{run_id}.csv"
+    with filepath.open("w", encoding="utf-8", newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    return filepath
+
+
+def _softmax(logits: np.ndarray) -> np.ndarray:
+    if logits.ndim == 1:
+        logits = logits.reshape(1, -1)
+    if logits.shape[-1] == 1:
+        logits_2d = np.column_stack([-logits, logits])
+    else:
+        logits_2d = logits
+    shifted = logits_2d - np.max(logits_2d, axis=-1, keepdims=True)
+    exp_logits = np.exp(shifted)
+    return exp_logits / np.sum(exp_logits, axis=-1, keepdims=True)
 
 
 def append_leaderboard_row(csv_path: str, summary: dict[str, Any]) -> Path:

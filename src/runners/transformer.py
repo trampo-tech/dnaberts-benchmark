@@ -29,6 +29,7 @@ from services.benchmark_logger import (
     build_run_id,
     get_git_commit,
     resolve_experiment_name,
+    save_predictions_csv,
     save_run_summary,
     utc_timestamp,
 )
@@ -438,6 +439,14 @@ def _setup_mlflow(
     mlflow.set_experiment(mlflow_experiment)
     os.environ["MLFLOW_FLATTEN_PARAMS"] = "1"
     mlflow.start_run(run_name=run_id)
+    mlflow_tags = {
+        "frozen_backbone": str(getattr(cfg.model, "frozen_backbone", False)).lower(),
+        "model_type": str(cfg.model.type),
+    }
+    extra_tags = getattr(cfg, "tags", None) or {}
+    if isinstance(extra_tags, dict):
+        mlflow_tags.update({str(k): str(v) for k, v in extra_tags.items()})
+    mlflow.set_tags(mlflow_tags)
     try:
         mlflow.log_params(mlflow_params)
     except mlflow.exceptions.MlflowException:
@@ -587,6 +596,15 @@ def run(cfg: DictConfig) -> None:
         trainer.save_model(os.path.join(outdir, "best_model"))
         if _is_main_process():
             tokenizer.save_pretrained(os.path.join(outdir, "best_model"))
+            if cfg.get("save_predictions", False):
+                pred_output = trainer.predict(tokenized["test"])
+                _ = save_predictions_csv(
+                    "reports/predictions",
+                    run_id,
+                    pred_output.predictions,
+                    pred_output.label_ids,
+                    num_labels,
+                )
         status = "completed"
     except Exception as exc:
         error_message = str(exc)
@@ -622,7 +640,7 @@ def run(cfg: DictConfig) -> None:
 
         if _is_main_process():
             _ = save_run_summary(outdir, summary)
-            _ = append_leaderboard_row(cfg.train.leaderboard_csv, summary)
+            _ = append_leaderboard_row(cfg.leaderboard_csv, summary)
             _finalize_mlflow(
                 mlflow_client,
                 summary,
