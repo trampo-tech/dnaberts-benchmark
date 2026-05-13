@@ -8,6 +8,7 @@ layer_name: "blocks.18.mlp.l3"
 
 # LoRA config
 use_lora: true
+frozen_backbone: false
 lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.1

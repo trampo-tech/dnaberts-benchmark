@@ -1,18 +1,23 @@
 #!/bin/bash
 set -e
 
-FROZEN_FLAG=""
-if [[ "${1:-}" == "--frozen" ]]; then
-    FROZEN_FLAG="model.frozen_backbone=true"
-fi
-
 echo "Running GUE tasks..."
 uv run python src/main.py -m \
   data=gue \
   data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1 \
   model=dnabert2,nucleotide_transformer,evo2 \
   train.eval_accumulation_steps=0 \
-  $FROZEN_FLAG \
+  seed=63194,21194
+
+echo ""
+
+echo "Running GUE tasks with frozen backbone..."
+uv run python src/main.py -m \
+  data=gue \
+  data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1 \
+  model=dnabert2,nucleotide_transformer,evo2 \
+  train.eval_accumulation_steps=0 \
+  model.frozen_backbone=true \
   seed=63194,21194
 
 echo ""

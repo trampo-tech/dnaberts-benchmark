@@ -338,7 +338,10 @@ def run(cfg: DictConfig) -> None:
         tokenized[split] = tokenized[split].remove_columns(drop)
 
     # -- Model: LoRA + classifier head ---------------------------------------
-    if getattr(cfg.model, "use_lora", False):
+    if getattr(cfg.model, "frozen_backbone", False):
+        for p in evo2_model.model.parameters():
+            p.requires_grad = False
+    elif getattr(cfg.model, "use_lora", False):
         from peft import LoraConfig, get_peft_model
 
         target_modules = str(cfg.model.lora_target_modules).split(",")
@@ -356,7 +359,6 @@ def run(cfg: DictConfig) -> None:
         evo2_model.model = get_peft_model(evo2_model.model, lora_config)
         evo2_model.model.base_model.model.config = saved_config
     else:
-        # Frozen backbone — only the classifier head is trained.
         for p in evo2_model.model.parameters():
             p.requires_grad = False
 
@@ -364,7 +366,10 @@ def run(cfg: DictConfig) -> None:
         evo2_model=evo2_model,
         num_labels=num_labels,
         layer_name=cfg.model.layer_name,
-        frozen_backbone=not bool(getattr(cfg.model, "use_lora", False)),
+        frozen_backbone=bool(
+            getattr(cfg.model, "frozen_backbone", False)
+            or not getattr(cfg.model, "use_lora", False)
+        ),
     )
 
     label_mode = str(getattr(cfg.model, "label_mode", "class_index"))

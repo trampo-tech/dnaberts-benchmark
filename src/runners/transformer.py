@@ -250,16 +250,7 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any =
     if configured_problem_type is not None and model_config is not None:
         model_config.problem_type = str(configured_problem_type)
 
-    if getattr(cfg.model, "use_lora", False):
-        target_modules = str(cfg.model.lora_target_modules).split(",")
-        model = apply_lora(
-            model,
-            r=int(cfg.model.lora_r),
-            lora_alpha=int(cfg.model.lora_alpha),
-            lora_dropout=float(cfg.model.lora_dropout),
-            target_modules=target_modules,
-        )
-    elif getattr(cfg.model, "frozen_backbone", False):
+    if getattr(cfg.model, "frozen_backbone", False):
         head_names = {"classifier", "cls", "score"}
         for name, param in model.named_parameters():
             if any(h in name for h in head_names):
@@ -269,6 +260,15 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any =
         trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
         total = sum(p.numel() for p in model.parameters())
         print(f"  Frozen backbone: {trainable:,} / {total:,} trainable parameters")
+    elif getattr(cfg.model, "use_lora", False):
+        target_modules = str(cfg.model.lora_target_modules).split(",")
+        model = apply_lora(
+            model,
+            r=int(cfg.model.lora_r),
+            lora_alpha=int(cfg.model.lora_alpha),
+            lora_dropout=float(cfg.model.lora_dropout),
+            target_modules=target_modules,
+        )
 
     return model, model_load_info, label_mode
 
