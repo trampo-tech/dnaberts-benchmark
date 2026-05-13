@@ -7,7 +7,7 @@ tasks:
     token_max_length: 20
     train_bs: 32
     eval_bs: 64
-    epochs: 4
+    epochs: 5
   splice_reconstructed:   # 400bp, 3-class, 45k samples
     num_labels: 3
     token_max_length: 80
@@ -19,7 +19,7 @@ tasks:
     token_max_length: 30
     train_bs: 32
     eval_bs: 64
-    epochs: 3
+    epochs: 5
   mouse_0:                # 101bp, binary, 8k samples — small dataset
     num_labels: 2
     token_max_length: 30
