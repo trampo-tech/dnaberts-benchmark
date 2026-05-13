@@ -5,11 +5,14 @@ max_length: 8192
 import_modules: []
 label_mode: class_index
 layer_name: "blocks.18.mlp.l3"
+# LoRA config
 use_lora: true
 lora_r: 16
 lora_alpha: 32
 lora_dropout: 0.1
 lora_target_modules: "mlp.l1,mlp.l2,mlp.l3,out_filter_dense"
+learning_rate: 1e-4
+head_learning_rate: 3e-4
 
 # EVO 2 uses a byte-level tokenizer (≈ 1 token / bp vs ≈ 3-6 for k-mer).
 # Per-task overrides take priority over the data config defaults.

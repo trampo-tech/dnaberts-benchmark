@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 import time
 from types import SimpleNamespace
@@ -72,7 +73,7 @@ class DummyConfig:
 
 
 class Evo2SequenceClassifier(nn.Module):
-    def __init__(self, evo2_model, num_labels: int, layer_name: str):
+    def __init__(self, evo2_model, num_labels: int, layer_name: str, frozen_backbone: bool = False):
         super().__init__()
         self.evo2 = evo2_model
 
@@ -82,6 +83,7 @@ class Evo2SequenceClassifier(nn.Module):
 
         self.num_labels = num_labels
         self.layer_name = layer_name
+        self.frozen_backbone = frozen_backbone
 
         # The inner StripedHyena (with LoRA layers), bypassing PEFT forward
         if hasattr(self.model, "base_model") and hasattr(
@@ -119,7 +121,12 @@ class Evo2SequenceClassifier(nn.Module):
             def hook(_, __, output):
                 if isinstance(output, tuple):
                     output = output[0]
-                embeddings[layer_name] = output.detach()
+                # Only detach when the backbone is frozen (no LoRA).
+                # With LoRA, keep the graph intact so gradients flow
+                # through the adapter layers.
+                embeddings[layer_name] = (
+                    output.detach() if self.frozen_backbone else output
+                )
 
             return hook
 
@@ -128,7 +135,11 @@ class Evo2SequenceClassifier(nn.Module):
             layer = self.inner_model.get_submodule(self.layer_name)
             handles.append(layer.register_forward_hook(_hook_fn(self.layer_name)))
 
-            _ = self.inner_model(input_ids)
+            # When the backbone is frozen (no LoRA), skip autograd tracking
+            # inside the model to save VRAM.
+            ctx = torch.no_grad() if self.frozen_backbone else contextlib.nullcontext()
+            with ctx:
+                _ = self.inner_model(input_ids)
         finally:
             for h in handles:
                 h.remove()
@@ -354,11 +365,16 @@ def run(cfg: DictConfig) -> None:
         evo2_model.model.config = None
         evo2_model.model = get_peft_model(evo2_model.model, lora_config)
         evo2_model.model.base_model.model.config = saved_config
+    else:
+        # Frozen backbone — only the classifier head is trained.
+        for p in evo2_model.model.parameters():
+            p.requires_grad = False
 
     model = Evo2SequenceClassifier(
         evo2_model=evo2_model,
         num_labels=num_labels,
         layer_name=cfg.model.layer_name,
+        frozen_backbone=not bool(getattr(cfg.model, "use_lora", False)),
     )
 
     label_mode = str(getattr(cfg.model, "label_mode", "class_index"))
@@ -408,6 +424,14 @@ def run(cfg: DictConfig) -> None:
     )
     warmup_steps = _resolve_train_override(cfg, "warmup_steps", None)
     cfg.train.gradient_accumulation_steps = gradient_accumulation_steps
+
+    # Model-level LR overrides (LoRA typically needs higher LR than full FT)
+    model_lr = getattr(cfg.model, "learning_rate", None)
+    if model_lr is not None:
+        cfg.train.learning_rate = float(model_lr)
+    model_head_lr = getattr(cfg.model, "head_learning_rate", None)
+    if model_head_lr is not None:
+        head_lr = float(model_head_lr)
 
     eval_steps = _resolve_train_override(cfg, "eval_steps", None)
     if eval_steps is not None:
