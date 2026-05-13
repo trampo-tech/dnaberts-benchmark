@@ -5,8 +5,7 @@ echo "Running GUE tasks..."
 uv run python src/main.py -m \
   data=gue \
   data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1 \
-  model=dnabert2,nucleotide_transformer,evo2 \
-  train.eval_accumulation_steps=0 \
+  model=dnabert2,nucleotide_transformer \ 
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
   tags.benchmark_batch=full_runs \
@@ -18,8 +17,7 @@ echo "Running GUE tasks with frozen backbone..."
 uv run python src/main.py -m \
   data=gue \
   data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1 \
-  model=dnabert2,nucleotide_transformer,evo2 \
-  train.eval_accumulation_steps=0 \
+  model=dnabert2,nucleotide_transformer \
   model.frozen_backbone=true \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
@@ -27,6 +25,7 @@ uv run python src/main.py -m \
   seed=63194,21194
 
 echo ""
+
 
 
 echo "Running BEND variant effects tasks (zero-shot)..."

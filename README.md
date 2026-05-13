@@ -1,125 +1,147 @@
 # DNABerts Benchmarks
 
-Multi-task benchmark for genomic foundation models using tasks from the
-[Genome Understanding Evaluation (GUE)](https://arxiv.org/abs/2306.15006)
-benchmark and selected BEND tasks, with Hydra-driven configuration, MLflow
-tracking, and local leaderboard export.
+Benchmark multi-tarefa para modelos fundacionais de genômica usando tarefas do
+[Genome Understanding Evaluation (GUE)](https://arxiv.org/abs/2306.15006) e
+tarefas selecionadas do BEND, com configuração via Hydra, tracking com MLflow, e
+exportação local de leaderboard.
 
 <a id="readme-top"></a>
 
 <details open="open">
-  <summary>Table of Contents</summary>
+  <summary>Índice</summary>
   <ol>
-    <li><a href="#supported-tasks">Supported Tasks</a></li>
-    <li><a href="#models">Models</a></li>
+    <li><a href="#tarefas-suportadas">Tarefas Suportadas</a></li>
+    <li><a href="#modelos">Modelos</a></li>
     <li><a href="#quickstart">Quickstart</a></li>
-    <li><a href="#gue-workflows">GUE Workflows</a></li>
-    <li><a href="#bend-workflows">BEND Workflows</a></li>
-    <li><a href="#tracking-outputs">Tracking Outputs</a></li>
-    <li><a href="#data">Data</a></li>
-    <li><a href="#author">Author</a></li>
+    <li><a href="#suite-completa">Suite Completa de Benchmarks</a></li>
+    <li><a href="#workflows-gue">Workflows GUE</a></li>
+    <li><a href="#workflows-bend">Workflows BEND</a></li>
+    <li><a href="#outputs-de-tracking">Outputs de Tracking</a></li>
+    <li><a href="#mlflow-tags">MLflow Tags</a></li>
+    <li><a href="#dados">Dados</a></li>
+    <li><a href="#autor">Autor</a></li>
   </ol>
 </details>
 
-## Supported Tasks
+## Tarefas Suportadas
 
-The core GUE task set covers 7 tasks spanning different biological problems,
-sequence lengths, species, and label counts. Per-task training parameters
-(batch size, epochs, max token length) are defined in `src/config/data/gue.yaml`.
+O conjunto principal do GUE cobre 5 tarefas abrangendo diferentes problemas
+biológicos, comprimentos de sequência, espécies e número de rótulos. Os
+parâmetros de treino por tarefa (batch size, épocas, comprimento máximo de
+tokens) estão definidos em `src/config/data/gue.yaml`.
 
 ### GUE
 
-| Task | Category | Seq Length | Labels | Train Size | Epochs | Batch Size |
+| Tarefa | Categoria | Seq | Labels | Treino | Épocas | Batch |
 |---|---|---|---|---|---|---|
-| `prom_core_all` | Promoter detection | 70bp | 2 | 47k | 4 | 32 |
+| `prom_core_all` | Detecção de promotores | 70bp | 2 | 47k | 4 | 32 |
 | `splice_reconstructed` | Splice site | 400bp | 3 | 36k | 5 | 32 |
-| `human_tf_0` | TF binding (human) | 101bp | 2 | 32k | 3 | 32 |
+| `human_tf_0` | TF binding (humano) | 101bp | 2 | 32k | 3 | 32 |
 | `mouse_0` | TF binding (mouse) | 101bp | 2 | 6k | 10 | 32 |
-| `EPI_HUVEC` | Epigenetic marks | 3000bp | 2 | 10k | 10 | 4 |
-| `emp_H3K4me1` | Histone modification | 500bp | 2 | 25k | 5 | 16 |
-| `fungi_species_20` | Species classification | 10000bp | 20 | 8k | 10 | 1 |
+| `emp_H3K4me1` | Modificação de histonas | 500bp | 2 | 25k | 5 | 16 |
 
 ### BEND
 
-| Task | Config | Approach | Metric |
+| Tarefa | Config | Abordagem | Métrica |
 |---|---|---|---|
-| Variant effects, expression | `data=bend_variant_expression` | Zero-shot cosine distance on REF vs ALT embeddings | Spearman rho |
-| Variant effects, disease | `data=bend_variant_disease` | Zero-shot cosine distance on REF vs ALT embeddings | AUROC |
-| Histone modification | `data=bend_histone` | Fine-tuned token classification with CNN decoder | Macro AUROC |
+| Variant effects, expression | `data=bend_variant_expression` | Distância cosseno zero-shot entre embeddings REF vs ALT | Spearman rho |
+| Variant effects, disease | `data=bend_variant_disease` | Distância cosseno zero-shot entre embeddings REF vs ALT | AUROC |
 
-## Models
+## Modelos
 
-| Model | Config | Type |
+| Modelo | Config | Tipo |
 |---|---|---|
 | DNABERT-2 (117M) | `model=dnabert2` | Transformer |
 | Nucleotide Transformer v2 (500M) | `model=nucleotide_transformer` | Transformer |
-| DNABERT-2 zero-shot variant effect | `model=dnabert2_zeroshot` | Zero-shot backbone |
-| Nucleotide Transformer zero-shot variant effect | `model=nt_zeroshot` | Zero-shot backbone |
-| DNABERT-2 histone token classifier | `model=dnabert2_histone` | Transformer + CNN decoder |
-| EVO 2 (1B base) | `model=evo2` | Hyena + LoRA probe |
+| DNABERT-2 zero-shot | `model=dnabert2_zeroshot` | Backbone zero-shot |
+| Nucleotide Transformer zero-shot | `model=nt_zeroshot` | Backbone zero-shot |
+| EVO 2 (1B base) | `model=evo2` | Hyena + LoRA |
 | K-mer + Logistic Regression | `model=kmer_logreg` | Baseline |
+
+> O EVO 2 também suporta `model.frozen_backbone=true` como alternativa ao LoRA,
+> congelando todo o backbone e treinando apenas a cabeça de classificação.
 
 ## Quickstart
 
-### 1. Install dependencies
+### 1. Instalar dependências
 
 ```bash
 uv sync
 ```
 
-> **EVO 2 only:** `flash-attn` must be installed separately before running
-> EVO 2 benchmarks (see the [EVO 2 section](#evo-2) below for details).
+> **EVO 2 apenas:** `flash-attn` deve ser instalado separadamente antes de
+> executar benchmarks com EVO 2 (veja a [seção EVO 2](#evo-2) abaixo).
 
-### 2. Download all GUE tasks
+### 2. Baixar todas as tarefas GUE
 
 ```bash
 uv run task download-gue
 ```
 
-### 3. Run a single GUE task
+### 3. Executar uma única tarefa GUE
 
 ```bash
 uv run python src/main.py data=gue data.task=splice_reconstructed
 ```
 
-### 4. Launch MLflow UI
+### 4. Abrir interface MLflow
 
 ```bash
 uv run task mlflow-ui
 ```
 
-## GUE Workflows
+## Suite Completa
 
-### Run all supported GUE tasks (sequential multirun)
+O script `run_benchmarks.sh` executa a suite completa de benchmarks:
+
+- **GUE padrão**: 5 tarefas × 3 modelos × 2 seeds (`63194`, `21194`)
+- **GUE com backbone congelado**: mesmas varreduras com `model.frozen_backbone=true`
+- **BEND zero-shot**: 2 tarefas × 2 modelos zero-shot
+- Habilita `save_predictions=true`, `tags.benchmark_batch=full_runs` e grava o
+  leaderboard em `reports/benchmark_full_runs.csv`
+
+```bash
+bash run_benchmarks.sh
+```
+
+## Workflows GUE
+
+### Executar todas as tarefas GUE suportadas (multirun sequencial)
 
 ```bash
 uv run python src/main.py -m \
   data=gue \
-  data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,EPI_HUVEC,emp_H3K4me1,fungi_species_20
+  data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1
 ```
 
-### Switch model
+### Alternar modelo
 
 ```bash
 uv run python src/main.py data=gue data.task=emp_H3K4me1 model=nucleotide_transformer
 ```
 
-### Override values from CLI
+### Congelar o backbone (apenas cabeça treinável)
 
 ```bash
-uv run python src/main.py data=gue data.task=fungi_species_20 train.learning_rate=1e-5
+uv run python src/main.py data=gue data.task=prom_core_all model.frozen_backbone=true
 ```
 
-### Full sweep: all tasks × all models
+### Sobrescrever valores via CLI
+
+```bash
+uv run python src/main.py data=gue data.task=splice_reconstructed train.learning_rate=1e-5
+```
+
+### Varredura completa: todas as tarefas × todos os modelos
 
 ```bash
 uv run python src/main.py -m \
   data=gue \
-  data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,EPI_HUVEC,emp_H3K4me1,fungi_species_20 \
+  data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1 \
   model=dnabert2,nucleotide_transformer,kmer_logreg
 ```
 
-### Multiple seeds
+### Múltiplas seeds
 
 ```bash
 uv run python src/main.py -m \
@@ -128,160 +150,206 @@ uv run python src/main.py -m \
   seed=42,123,456
 ```
 
+### Salvar predições do conjunto de teste
+
+```bash
+uv run python src/main.py data=gue data.task=splice_reconstructed save_predictions=true
+```
+
+Os CSVs de predição são gravados em `reports/predictions/<run_id>.csv` com
+colunas: `run_id`, `true_label`, `predicted_label`, `prob_class_0`...`prob_class_N`.
+
+### Alterar o caminho do leaderboard
+
+```bash
+uv run python src/main.py data=gue data.task=prom_core_all leaderboard_csv=reports/minha_varredura.csv
+```
+
+O default é `reports/benchmark_results.csv`, configurável em `config.yaml`.
+
 ### EVO 2
 
-EVO 2 is a Hyena-based DNA language model from the Arc Institute, loaded via the
-`evo2` PyPI package (not HuggingFace Transformers). It uses a byte-level
-`CharLevelTokenizer` where 1 token ≈ 1 nucleotide, making sequences ~5× longer
-in token count than BPE tokenizers like DNABERT-2's. LoRA is applied to MLP
-layers (`mlp.l1`, `mlp.l2`, `mlp.l3`, `out_filter_dense`) while the backbone
-remains frozen.
+EVO 2 é um modelo de linguagem de DNA baseado em Hyena do Arc Institute,
+carregado via pacote PyPI `evo2` (não HuggingFace Transformers). Utiliza um
+tokenizador `CharLevelTokenizer` em nível de byte onde 1 token ≈ 1 nucleotídeo,
+tornando as sequências mais longas em contagem de tokens do que tokenizadores
+BPE como o do DNABERT-2. Por padrão, LoRA é aplicado às camadas MLP
+(`mlp.l1`, `mlp.l2`, `mlp.l3`, `out_filter_dense`) enquanto o resto permanece
+congelado. Alternativamente, é possível usar `model.frozen_backbone=true` para
+congelar todo o backbone — nesse caso apenas a cabeça linear de classificação é
+treinada (sem LoRA).
+ 
 
-**Differences from other models:**
+**Diferenças em relação aos outros modelos:**
 
-- **Not an HF model** — loaded from `evo2.Evo2("evo2_1b_base")`, not `AutoModel`.
-  The training loop bypasses the standard `DataCollatorWithPadding` in favour of
-  pre-padded sequences with `default_data_collator`.
-- **Flash-Attention required** — `evo2` depends on `flash-attn` internally. It
-  is not listed in `pyproject.toml` because it has no pre-built wheels on PyPI.
-  Install it from the GitHub release before running:
-  ```bash
-  uv pip install "https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.3/flash_attn-2.7.3+cu12torch2.6cxx11abiFALSE-cp311-cp311-linux_x86_64.whl"
-  ```
-  (Adjust the wheel tag to match your CUDA / PyTorch version.)
-- **VRAM** — the default `evo2_1b_base` (~2.2 GB bf16 + activations) fits on a
-  12 GB GPU. For a 24 GB GPU you can switch to the 7B model:
-  ```bash
-  uv run python src/main.py data=gue data.task=prom_core_all model=evo2 model.name=evo2_7b_base model.layer_name=blocks.28.mlp.l3
-  ```
-- **LoRA-only** — only LoRA adapter weights (~10M) are trained. The base model
-  is frozen. PEFT wraps the StripedHyena backbone, and the classifier head sits
-  on top of a single intermediate layer embedding (mean-pooled).
-- **bf16** — EVO 2 weights are natively bfloat16. The runner automatically
-  enables `bf16` mixed precision and disables `fp16`.
-- **Monkey-patch for 1B model** — the `evo2_1b_base` config requires Transformer
-  Engine for FP8 projections, which is not installed. A one-line patch in
-  `.venv/.../evo2/models.py` allows the 1B model to fall back to bf16 (same
-  behaviour as the 7B model). This is applied automatically at install time.
+- **Não é um modelo HF** — carregado via `evo2.Evo2("evo2_1b_base")`, não via
+  `AutoModel`. O loop de treino ignora o `DataCollatorWithPadding` padrão e usa
+  sequências pré-padded com `default_data_collator`.
+- **Flash-Attention obrigatório** — `evo2` depende internamente de `flash-attn`,
+  que não está listado no `pyproject.toml` por não ter wheels pré-compilados no
+  PyPI. Instale a partir do release do GitHub antes de executar:
 
-**Quick test:**
+O projeto inclui uma task que detecta automaticamente sua versão de Python, CUDA
+e PyTorch e instala a wheel correta:
 
+```bash
+uv run task install-flash-attn
+```
+
+Se preferir instalar manualmente, verifique suas versões primeiro:
+
+```bash
+uv run task check_cuda   # ex: cu124
+uv run task check_torch  # ex: 2.6
+uv run python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"  # ex: cp313
+```
+
+Exemplo de comando manual:
+
+```bash
+uv pip install "https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3+cu124torch2.6-cp313-cp313-linux_x86_64.whl"
+```
+(Ajuste a tag do wheel conforme sua versão de CUDA / PyTorch.)
+
+- **bf16** — os pesos do EVO 2 são nativamente bfloat16. O runner ativa
+  automaticamente precisão mista `bf16` e desativa `fp16`.
+
+**Teste rápido:**
 ```bash
 uv run python src/main.py data=gue data.task=prom_core_all model=evo2 seed=21194
 ```
 
+## Workflows BEND
 
-## BEND Workflows
+Os workflows BEND exigem dados brutos locais e um arquivo FASTA hg38. Os
+scripts de preparação esperam um FASTA indexado padrão; o `pyfaidx` criará um
+`.fai` no primeiro acesso se necessário. As configurações padrão estão em
+`src/config/download_bend.yaml`, `src/config/prepare_bend_variant_effects.yaml`
+e `src/config/kmer_variant_baseline.yaml`.
 
-BEND workflows require local raw data and an hg38 FASTA file. The prep scripts
-expect a standard indexed FASTA; `pyfaidx` will create a `.fai` on first access
-if needed. Default settings live in `src/config/download_bend.yaml`,
-`src/config/prepare_bend_variant_effects.yaml`,
-`src/config/prepare_bend_histone.yaml`, and
-`src/config/kmer_variant_baseline.yaml`.
-
-### 1. Download raw BEND files from ERDA
-
-Download all required task groups:
-
-```bash
-uv run python scripts/download_bend.py
-```
-Genomes is included by default because it provides the base FASTA files.
+### 1. Baixar arquivos BEND brutos do ERDA
 
 ```bash
 uv run python scripts/download_bend.py
 ```
 
-### 2. Prepare variant-effect datasets
+Genomes está incluído por padrão pois fornece os arquivos FASTA base.
+
+### 2. Preparar datasets de variant-effect
 
 ```bash
 uv run python scripts/prepare_bend_variant_effects.py \
   genome_fasta=data/raw/bend/data/genomes/GRCh38.primary_assembly.genome.fa
 ```
 
-### 3. Run zero-shot variant-effect benchmarks
+### 3. Executar benchmarks zero-shot de variant-effect
 
-Expression task with DNABERT-2:
+Tarefa de expression com DNABERT-2:
 
 ```bash
 uv run python src/main.py model=dnabert2_zeroshot data=bend_variant_expression
 ```
 
-Disease task with DNABERT-2:
+Tarefa de disease com DNABERT-2:
 
 ```bash
 uv run python src/main.py model=dnabert2_zeroshot data=bend_variant_disease
 ```
 
-Expression task with Nucleotide Transformer:
+Tarefa de expression com Nucleotide Transformer:
 
 ```bash
 uv run python src/main.py model=nt_zeroshot data=bend_variant_expression
 ```
 
-The zero-shot runner writes per-variant cosine distances to
-`reports/variant_effect_distances_<experiment>.csv`.
+O runner zero-shot grava distâncias cosseno por variante em
+`reports/variant_effect_distances_<experiment>.csv`. O arquivo fica maior que 100mb portanto nenhum é salvo no github.
 
-### 4. Run the k-mer zero-shot baseline
+### 4. Executar o baseline zero-shot com k-mer
 
-Expression baseline:
+Baseline expression:
 
 ```bash
 uv run python scripts/kmer_variant_baseline.py \
   data=bend_variant_expression
 ```
 
-Disease baseline:
+Baseline disease:
 
 ```bash
 uv run python scripts/kmer_variant_baseline.py \
   data=bend_variant_disease
 ```
 
+## Outputs de Tracking
 
-## Tracking Outputs
+Cada execução grava:
 
-Each run writes:
-- **GUE leaderboard CSV (append):** `reports/benchmark_results.csv`
-- **BEND leaderboard CSV (append):** `reports/benchmark_results_bend.csv`
-- **MLflow run data:** `mlruns/`
+| Output | Caminho | Descrição |
+|---|---|---|
+| Leaderboard GUE (append) | `reports/benchmark_results.csv` | Métricas agregadas por run (F1, MCC, accuracy, ROC-AUC) |
+| Leaderboard BEND (append) | `reports/benchmark_results_bend.csv` | Métricas de variant-effect |
+| Predições de teste | `reports/predictions/<run_id>.csv` | Quando `save_predictions=true` — labels, predições e probabilidades por amostra |
+| Dados de execução MLflow | `mlruns/` | Parâmetros, métricas e artefatos |
+| Sumário da run | `runs/<exp>/<model>/run_summary.json` | Sumário completo em JSON |
 
-GUE tracks F1, accuracy, MCC, and ROC-AUC. BEND variant computes AUROC.
+> O caminho do leaderboard GUE é configurável via `leaderboard_csv` no
+> `config.yaml` ou via CLI: `leaderboard_csv=reports/outro.csv`. O script
+> `run_benchmarks.sh` usa `reports/benchmark_full_runs.csv`.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## MLflow Tags
 
-## Data
+As runs do MLflow recebem automaticamente as tags `frozen_backbone` e
+`model_type`. Tags adicionais podem ser definidas via config ou CLI:
+
+```bash
+uv run python src/main.py data=gue data.task=prom_core_all tags.minha_tag=valor
+```
+
+Múltiplas tags:
+
+```bash
+uv run python src/main.py -m \
+  data=gue data.task=splice_reconstructed \
+  tags.benchmark_batch=full_runs tags.notes=teste_lr
+```
+
+<p align="right">(<a href="#readme-top">voltar ao topo</a>)</p>
+
+## Dados
 
 ### GUE
 
-All GUE tasks are downloaded from `leannmlindsey/GUE` on Hugging Face. The
-`download-gue` task in `pyproject.toml` calls `scripts/prepare_hf_dataset.py`
-for each task, producing `data/processed/leannmlindsey_GUE_<task>/{train,validation,test}.csv`.
+Todas as tarefas GUE são baixadas de `leannmlindsey/GUE` no Hugging Face. A
+tarefa `download-gue` no `pyproject.toml` chama `scripts/prepare_hf_dataset.py`
+para cada tarefa, gerando
+`data/processed/leannmlindsey_GUE_<task>/{train,validation,test}.csv`.
 
-To add a new GUE task: add an entry to the `tasks` dict in `src/config/data/gue.yaml`,
-then re-run the download script with the new task name added to the `TASKS` array.
+Para adicionar uma nova tarefa GUE: adicione uma entrada no dicionário `tasks`
+em `src/config/data/gue.yaml` e execute novamente o script de download com o
+nome da nova tarefa no array `TASKS`.
 
 ### BEND
 
-Supported BEND raw files are downloaded from ERDA into:
+Os arquivos BEND brutos suportados são baixados do ERDA para:
 
 - `data/raw/bend/variant_effects/`
-- `data/raw/bend/histone_modification/`
+- `data/raw/bend/data/genomes/`
 
-Processed outputs are written to:
+Os outputs processados são gravados em:
 
 - `data/processed/bend_variant_effects/{expression,disease}.csv`
-- `data/processed/bend_histone/{train,validation,test}.csv`
 
-The variant prep script builds centered REF and ALT windows directly from the
-reference genome and skips variants with mismatched reference alleles or
-out-of-bounds windows. The histone prep script expects BED-style rows with
-`chrom`, `start`, `end`, and 18 binary label columns, then tiles contiguous
-512 bp bins into trainable windows.
+O script de preparação de variantes constrói janelas centradas REF e ALT
+diretamente do genoma de referência e ignora variantes com alelos de referência
+incompatíveis ou janelas fora dos limites.
 
-## Author
+## Autorres
 
-- [Matheus Girardi](matheusmgirari@gmail.com)
+- Matheus Girardi
+- Gabriel Bau
+- Andrei Silva
+- Artur Pandolfo
+- Evandro Diniz
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<p align="right">(<a href="#readme-top">voltar ao topo</a>)</p>
