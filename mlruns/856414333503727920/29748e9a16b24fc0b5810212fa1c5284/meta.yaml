@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/856414333503727920/29748e9a16b24fc0b5810212fa1c5284/artifacts
+end_time: 1778629113086
+entry_point_name: ''
+experiment_id: '856414333503727920'
+lifecycle_stage: active
+run_id: 29748e9a16b24fc0b5810212fa1c5284
+run_name: bend_variant_expression__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260512T232740Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778628463716
+status: 3
+tags: []
+user_id: matheus.girardi
