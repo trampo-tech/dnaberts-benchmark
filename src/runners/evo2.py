@@ -320,6 +320,8 @@ def run(cfg: DictConfig) -> None:
     label_col = cfg.data.label_col
     label_offset = int(getattr(cfg.data, "label_offset", 0))
 
+    token_max_length = resolver.resolve("token_max_length", type_fn=int, default=cfg.model.max_length)
+
     def tokenize(batch):
         seqs = [x.upper() for x in batch[text_col]]
         all_ids = []
@@ -406,7 +408,6 @@ def run(cfg: DictConfig) -> None:
     train_bs = resolver.resolve("train_bs", type_fn=int, default=cfg.train.train_bs)
     eval_bs = resolver.resolve("eval_bs", type_fn=int, default=cfg.train.eval_bs)
     gradient_accumulation_steps = resolver.resolve("gradient_accumulation_steps", type_fn=int, default=1)
-    token_max_length = resolver.resolve("token_max_length", type_fn=int, default=cfg.model.max_length)
     epochs = resolver.resolve("epochs", type_fn=int, default=cfg.train.epochs)
     learning_rate = resolver.resolve("learning_rate", type_fn=float, default=cfg.train.learning_rate)
     head_lr = resolver.resolve("head_learning_rate", type_fn=float, default=0) or None
