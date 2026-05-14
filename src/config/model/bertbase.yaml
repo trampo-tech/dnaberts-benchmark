@@ -1,0 +1,10 @@
+type: transformer
+name: bert-base-uncased
+trust_remote_code: false
+revision: null
+max_length: 512
+sequence_preprocess: baseline_char
+import_modules: []
+label_mode: class_index
+frozen_backbone: false
+token_max_length: 512
