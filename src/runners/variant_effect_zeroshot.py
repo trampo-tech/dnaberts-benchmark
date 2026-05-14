@@ -22,6 +22,7 @@ except ImportError:
 
 from transformers import AutoConfig, AutoModel, AutoModelForMaskedLM, AutoTokenizer
 
+from config.resolver import make_variant_zeroshot_resolver
 from modeling.compat import (
     block_triton_imports,
     disable_remote_flash_attention,
@@ -200,6 +201,8 @@ def _finalize_mlflow(
 
 
 def run(cfg: DictConfig) -> None:
+    resolver = make_variant_zeroshot_resolver(cfg)
+
     device, device_name = _setup_environment(cfg)
     experiment = resolve_experiment_name(cfg)
     run_id = build_run_id(experiment, cfg.model.name)
@@ -209,12 +212,10 @@ def run(cfg: DictConfig) -> None:
     alt_col = str(cfg.data.alt_col)
     label_col = str(cfg.data.label_col)
     metric_name = str(cfg.data.metric)
-    token_max_length = int(
-        getattr(cfg.data, "token_max_length", 0)
-        or getattr(cfg.data, "max_length", 0)
-        or cfg.model.max_length
+    token_max_length = resolver.resolve(
+        "token_max_length", type_fn=int, default=cfg.model.max_length
     )
-    eval_bs = int(getattr(cfg.data, "eval_bs", cfg.train.eval_bs))
+    eval_bs = resolver.resolve("eval_bs", type_fn=int, default=cfg.train.eval_bs)
 
     tokenizer = AutoTokenizer.from_pretrained(
         cfg.model.name,

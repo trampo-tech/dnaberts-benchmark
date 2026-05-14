@@ -22,6 +22,7 @@ from transformers import (
     TrainingArguments,
 )
 
+from config.resolver import ParamResolver, make_transformer_resolver
 from modeling.compat import block_triton_imports, disable_remote_flash_attention
 from modeling.train import apply_lora, load_model_for_sequence_classification
 from services.benchmark_logger import (
@@ -44,8 +45,17 @@ def _import_optional_modules(modules: list[str] | None):
         importlib.import_module(module_name)
 
 
-def _preprocess_seq(seq: str) -> str:
-    return seq.upper()
+def _preprocess_seq(seq: str, mode: str | None = None, kmer: int = 3) -> str:
+    s = seq.upper()
+    if mode == "baseline_char":
+        return " ".join(list(s))
+    if mode == "kmer":
+        if len(s) < kmer:
+            return s
+        return " ".join(s[i : i + kmer] for i in range(len(s) - (kmer - 1)))
+    if mode == "rna_t_to_u":
+        return s.replace("T", "U")
+    return s
 
 
 def _estimate_unk_ratio(
@@ -169,7 +179,7 @@ def _setup_environment(cfg: DictConfig) -> str:
     return device_name
 
 
-def _load_and_tokenize(cfg: DictConfig):
+def _load_and_tokenize(cfg: DictConfig,resolver: ParamResolver):
     ds = load_dataset(
         "csv",
         data_files={
@@ -189,14 +199,15 @@ def _load_and_tokenize(cfg: DictConfig):
         trust_remote_code=cfg.model.trust_remote_code,
         revision=getattr(cfg.model, "revision", None),
     )
-    token_max_length = int(
-        getattr(cfg.data, "token_max_length", 0)
-        or getattr(cfg.data, "max_length", 0)
-        or cfg.model.max_length
+    token_max_length = resolver.resolve(
+        "token_max_length", type_fn=int, default=cfg.model.max_length
     )
 
+    prep_mode = getattr(cfg.model, "sequence_preprocess", None)
+    prep_kmer = int(getattr(cfg.model, "kmer", 3) or 3)
+
     def tokenize(batch):
-        seqs = [_preprocess_seq(x) for x in batch[text_col]]
+        seqs = [_preprocess_seq(x, mode=prep_mode, kmer=prep_kmer) for x in batch[text_col]]
         out = tokenizer(seqs, truncation=True, max_length=token_max_length)
         out["label"] = [int(x) - label_offset for x in batch[label_col]]
         return out
@@ -272,22 +283,6 @@ def _load_and_configure_model(cfg: DictConfig, num_labels: int, tokenizer: Any =
         )
 
     return model, label_mode
-
-
-def _resolve_train_override(cfg: DictConfig, key: str, default: Any = None) -> Any:
-    direct_value = getattr(cfg.data, key, None)
-    if direct_value is not None:
-        return direct_value
-
-    task_name = getattr(cfg.data, "task", None)
-    task_registry = getattr(cfg.data, "tasks", None)
-    if task_name and task_registry is not None and task_name in task_registry:
-        task_cfg = task_registry[task_name]
-        nested_value = getattr(task_cfg, key, None)
-        if nested_value is not None:
-            return nested_value
-
-    return getattr(cfg.train, key, default)
 
 
 def _build_metrics_fn(num_labels: int, average: str):
@@ -484,11 +479,14 @@ def _finalize_mlflow(
 
 
 def run(cfg: DictConfig) -> None:
+    # -- Config resolution ----------------------------------------------------
+    resolver = make_transformer_resolver(cfg)
+
     # -- Environment ----------------------------------------------------------
     device_name = _setup_environment(cfg)
 
     # -- Data -----------------------------------------------------------------
-    tokenized, tokenizer, num_labels, token_max_length = _load_and_tokenize(cfg)
+    tokenized, tokenizer, num_labels, token_max_length = _load_and_tokenize(cfg, resolver)
 
     # -- Model ----------------------------------------------------------------
     model, label_mode = _load_and_configure_model(
@@ -496,7 +494,7 @@ def run(cfg: DictConfig) -> None:
     )
 
     # -- Metrics & output paths -----------------------------------------------
-    metric_average = str(_resolve_train_override(cfg, "metric_average", "macro"))
+    metric_average = str(resolver.resolve("metric_average", default="macro"))
     compute_metrics = _build_metrics_fn(num_labels, metric_average)
     experiment = resolve_experiment_name(cfg)
     outdir = os.path.join(
@@ -505,22 +503,22 @@ def run(cfg: DictConfig) -> None:
     run_id = build_run_id(experiment, cfg.model.name)
 
     # -- Training setup -------------------------------------------------------
-    train_bs = int(_resolve_train_override(cfg, "train_bs", cfg.train.train_bs))
-    eval_bs = int(_resolve_train_override(cfg, "eval_bs", cfg.train.eval_bs))
-    epochs = int(_resolve_train_override(cfg, "epochs", cfg.train.epochs))
-    head_lr = float(_resolve_train_override(cfg, "head_learning_rate", 0) or 0) or None
-    warmup_steps = _resolve_train_override(cfg, "warmup_steps", None)
+    train_bs = resolver.resolve("train_bs", type_fn=int, default=cfg.train.train_bs)
+    eval_bs = resolver.resolve("eval_bs", type_fn=int, default=cfg.train.eval_bs)
+    epochs = resolver.resolve("epochs", type_fn=int, default=cfg.train.epochs)
+    head_lr = resolver.resolve("head_learning_rate", type_fn=float, default=0) or None
+    warmup_steps = resolver.resolve("warmup_steps", default=None)
 
-    eval_steps = _resolve_train_override(cfg, "eval_steps", None)
+    eval_steps = resolver.resolve("eval_steps", default=None)
     if eval_steps is not None:
         cfg.train.eval_steps = int(eval_steps)
 
-    save_steps = _resolve_train_override(cfg, "save_steps", None)
+    save_steps = resolver.resolve("save_steps", default=None)
     if save_steps is not None:
         cfg.train.save_steps = int(save_steps)
 
-    gradient_accumulation_steps = _resolve_train_override(
-        cfg, "gradient_accumulation_steps", 1
+    gradient_accumulation_steps = resolver.resolve(
+        "gradient_accumulation_steps", type_fn=int, default=1
     )
     cfg.train.gradient_accumulation_steps = int(gradient_accumulation_steps)
 

@@ -22,10 +22,10 @@ from transformers import (
 )
 from transformers.modeling_outputs import SequenceClassifierOutput
 
+from config.resolver import make_evo2_resolver
 from runners.transformer import (
     BenchmarkTrainer,
     _build_training_args,
-    _resolve_train_override,
 )
 from services.benchmark_logger import (
     append_leaderboard_row,
@@ -274,6 +274,9 @@ def _finalize_mlflow(
 def run(cfg: DictConfig) -> None:
     print(OmegaConf.to_yaml(cfg))
 
+    # -- Config resolution ----------------------------------------------------
+    resolver = make_evo2_resolver(cfg)
+
     # -- Environment ----------------------------------------------------------
     device_name = (
         torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu"
@@ -389,9 +392,7 @@ def run(cfg: DictConfig) -> None:
         )
 
     # -- Metrics & output paths -----------------------------------------------
-    metric_average = str(
-        _resolve_train_override(cfg, "metric_average", "macro")
-    )
+    metric_average = str(resolver.resolve("metric_average", default="macro"))
     compute_metrics = _build_metrics_fn(num_labels, metric_average)
     experiment = resolve_experiment_name(cfg)
     outdir = os.path.join(
@@ -402,36 +403,23 @@ def run(cfg: DictConfig) -> None:
     run_id = build_run_id(experiment, cfg.model.name)
 
     # -- Training setup -------------------------------------------------------
-    # Single override chain for every training param:
-    #  1. cfg.model.tasks[task][key]   per-task EVO 2 value
-    #  2. cfg.model.{key}              model-level EVO 2 default
-    #  3. _resolve_train_override      gue.yaml → train.yaml
-    def _resolve(key, type_fn=int, default=None):
-        tasks = getattr(cfg.model, "tasks", {}) or {}
-        if task_name and task_name in tasks and key in tasks[task_name]:
-            return type_fn(tasks[task_name][key])
-        model_val = getattr(cfg.model, key, None)
-        if model_val is not None:
-            return type_fn(model_val)
-        return type_fn(_resolve_train_override(cfg, key, default))
-
-    train_bs = _resolve("train_bs", int, cfg.train.train_bs)
-    eval_bs = _resolve("eval_bs", int, cfg.train.eval_bs)
-    gradient_accumulation_steps = _resolve("gradient_accumulation_steps", int, 1)
-    token_max_length = _resolve("token_max_length", int, cfg.model.max_length)
-    epochs = _resolve("epochs", int, cfg.train.epochs)
-    learning_rate = _resolve("learning_rate", float, cfg.train.learning_rate)
-    head_lr = _resolve("head_learning_rate", float, 0) or None
-    warmup_steps = _resolve("warmup_steps", int, None) or None
+    train_bs = resolver.resolve("train_bs", type_fn=int, default=cfg.train.train_bs)
+    eval_bs = resolver.resolve("eval_bs", type_fn=int, default=cfg.train.eval_bs)
+    gradient_accumulation_steps = resolver.resolve("gradient_accumulation_steps", type_fn=int, default=1)
+    token_max_length = resolver.resolve("token_max_length", type_fn=int, default=cfg.model.max_length)
+    epochs = resolver.resolve("epochs", type_fn=int, default=cfg.train.epochs)
+    learning_rate = resolver.resolve("learning_rate", type_fn=float, default=cfg.train.learning_rate)
+    head_lr = resolver.resolve("head_learning_rate", type_fn=float, default=0) or None
+    warmup_steps = resolver.resolve("warmup_steps", type_fn=int, default=None) or None
 
     cfg.train.learning_rate = learning_rate
     cfg.train.gradient_accumulation_steps = gradient_accumulation_steps
 
-    eval_steps = _resolve("eval_steps", int, None)
+    eval_steps = resolver.resolve("eval_steps", type_fn=int, default=None)
     if eval_steps:
         cfg.train.eval_steps = eval_steps
 
-    save_steps = _resolve("save_steps", int, None)
+    save_steps = resolver.resolve("save_steps", type_fn=int, default=None)
     if save_steps:
         cfg.train.save_steps = save_steps
 
