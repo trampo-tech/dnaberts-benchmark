@@ -541,10 +541,13 @@ def run(cfg: DictConfig) -> None:
         trainer.save_model(os.path.join(outdir, "best_model"))
         if _is_main_process() and cfg.get("save_predictions", False):
             pred_output = trainer.predict(tokenized["test"])
+            logits = pred_output.predictions
+            if isinstance(logits, tuple):
+                logits = logits[0]
             _ = save_predictions_csv(
                 "reports/predictions",
                 run_id,
-                pred_output.predictions,
+                logits,
                 pred_output.label_ids,
                 num_labels,
             )

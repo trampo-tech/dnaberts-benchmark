@@ -192,6 +192,9 @@ def save_predictions_csv(output_dir: str, run_id: str, logits: np.ndarray, label
 
 
 def _softmax(logits: np.ndarray) -> np.ndarray:
+    if isinstance(logits, tuple):
+        logits = logits[0]
+    logits = np.asarray(logits)
     if logits.ndim == 1:
         logits = logits.reshape(1, -1)
     if logits.shape[-1] == 1:
