@@ -66,6 +66,8 @@ download-bend-variants = "uv run python scripts/prepare_bend_variant_effects.py 
 
 kmer-variant-baseline = "uv run python scripts/kmer_variant_baseline.py"
 
+verify-evo2 = "uv run python scripts/verify_evo2.py"
+
 [[tool.uv.index]]
 name = "pytorch-cu13"
 url = "https://download.pytorch.org/whl/cu13"
