@@ -14,14 +14,14 @@ lora_alpha: 32
 lora_dropout: 0.1
 lora_target_modules: "mlp.l1,mlp.l2,mlp.l3,out_filter_dense"
 learning_rate: 1e-4
-head_learning_rate: 3e-4
+head_learning_rate: 3e-5
 
 # EVO 2 byte-level tokenizer: ≈ 1 token / bp (vs ≈ 3-6 for k-mer).
 # Model-level defaults override gue.yaml / train.yaml.
 token_max_length: null  # resolved per-task below
-train_bs: 4
-eval_bs: 8
-gradient_accumulation_steps: 8
+train_bs: 32
+eval_bs: 32
+gradient_accumulation_steps: 1
 
 # Per-task overrides take priority over model-level defaults above.
 # Any key handled by _resolve() in evo2.py can appear here.
@@ -30,22 +30,16 @@ tasks:
     token_max_length: 70
   splice_reconstructed:
     token_max_length: 400
-    eval_bs: 4
+    #train_bs: 8
+    #eval_bs: 8
+    #gradient_accumulation_steps: 4
   human_tf_0:
     token_max_length: 101
   mouse_0:
     token_max_length: 101
     gradient_accumulation_steps: 4
-  EPI_HUVEC:
-    token_max_length: 3000
-    train_bs: 1
-    eval_bs: 1
-    gradient_accumulation_steps: 16
   emp_H3K4me1:
     token_max_length: 500
-    eval_bs: 4
-  fungi_species_20:
-    token_max_length: 10000
-    train_bs: 1
-    eval_bs: 1
-    gradient_accumulation_steps: 32
+    #train_bs: 8
+    #eval_bs: 8
+    #gradient_accumulation_steps: 4

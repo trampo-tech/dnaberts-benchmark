@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/f29634efbb384640bfb7e3d99e5e9687/artifacts
+end_time: 1778808634647
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: f29634efbb384640bfb7e3d99e5e9687
+run_name: gue_mouse_0_frozen__evo2_7b_base__20260515T013032Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778808633054
+status: 4
+tags: []
+user_id: matheus.girardi

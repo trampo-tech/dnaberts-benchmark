@@ -448,9 +448,9 @@ def run(cfg: DictConfig) -> None:
     )
 
     if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
-    training_args.fp16 = False
-    training_args.bf16 = True
-    # bf16 does not need a GradScaler; we disable it after trainer init.
+        training_args.fp16 = False
+        training_args.bf16 = True
+        # bf16 does not need a GradScaler; we disable it after trainer init.
 
     # Disable safetensors — the column-split Wqkv permutation creates
     # non-contiguous parameters that safetensors cannot handle.

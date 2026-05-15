@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/fc9af94718d34cd2947d2ca14836ec0e/artifacts
+end_time: 1778854946752
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: fc9af94718d34cd2947d2ca14836ec0e
+run_name: gue_prom_core_all__evo2_1b_base__20260515T142224Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778854945333
+status: 4
+tags: []
+user_id: matheus.girardi
