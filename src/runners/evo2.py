@@ -447,10 +447,10 @@ def run(cfg: DictConfig) -> None:
         cfg, outdir, run_id, train_bs, eval_bs, epochs
     )
 
-    # EVO 2 weights are bf16 by default; use bf16 AMP instead of fp16
     if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
-        training_args.fp16 = False
-        training_args.bf16 = True
+    training_args.fp16 = False
+    training_args.bf16 = True
+    # bf16 does not need a GradScaler; we disable it after trainer init.
 
     # Disable safetensors — the column-split Wqkv permutation creates
     # non-contiguous parameters that safetensors cannot handle.
@@ -483,6 +483,11 @@ def run(cfg: DictConfig) -> None:
         label_num_classes=num_labels,
         head_learning_rate=head_lr,
     )
+
+    # PyTorch 2.6 GradScaler is not implemented for bf16. Disable
+    # the scaler in accelerate so optimizer.step() skips unscale_.
+    if getattr(trainer.accelerator, "scaler", None) is not None:
+        trainer.accelerator.scaler._enabled = False
 
     # -- MLflow ---------------------------------------------------------------
     model_load_info = SimpleNamespace(

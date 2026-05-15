@@ -158,6 +158,17 @@ class BenchmarkTrainer(Trainer):
         )
 
 
+    def _get_grad_norm(self, model, grad_norm=None):
+        # PyTorch 2.6 GradScaler lacks bf16 foreach support.
+        # Compute grad norm manually without unscaling.
+        if grad_norm is not None and not torch.isinf(grad_norm):
+            return grad_norm
+        total_norm = 0.0
+        for p in model.parameters():
+            if p.grad is not None:
+                total_norm += p.grad.data.norm(2).item() ** 2
+        return total_norm ** 0.5
+
     def _save(self, output_dir: str | None = None, state_dict=None):
         # EVO 2 StripedHyena Wqkv column-split creates non-contiguous parameters
         # that safetensors cannot flatten. Override parent to always use torch.save.
