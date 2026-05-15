@@ -185,39 +185,10 @@ treinada (sem LoRA).
 - **Não é um modelo HF** — carregado via `evo2.Evo2("evo2_1b_base")`, não via
   `AutoModel`. O loop de treino ignora o `DataCollatorWithPadding` padrão e usa
   sequências pré-padded com `default_data_collator`.
-- **Flash-Attention obrigatório** — `evo2` depende internamente de `flash-attn`,
-  que não está listado no `pyproject.toml` por não ter wheels pré-compilados no
-  PyPI. Instale a partir do release do GitHub antes de executar:
+- **Flash-Attention obrigatório** — `evo2` depende internamente de `flash-attn`.
+- **Transformer Engine** - Para o modelo 1B (40B e 20B também) é necessário ter uma GPU com suporte para fp8 via Transformer Engine.
 
-O projeto inclui uma task que detecta automaticamente sua versão de Python, CUDA
-e PyTorch e instala a wheel correta:
-
-```bash
-uv run task install-flash-attn
-```
-
-Se preferir instalar manualmente, verifique suas versões primeiro:
-
-```bash
-uv run task check_cuda   # ex: cu124
-uv run task check_torch  # ex: 2.6
-uv run python -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"  # ex: cp313
-```
-
-Exemplo de comando manual:
-
-```bash
-uv pip install "https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3+cu124torch2.6-cp313-cp313-linux_x86_64.whl"
-```
-(Ajuste a tag do wheel conforme sua versão de CUDA / PyTorch.)
-
-- **bf16** — os pesos do EVO 2 são nativamente bfloat16. O runner ativa
-  automaticamente precisão mista `bf16` e desativa `fp16`.
-
-**Teste rápido:**
-```bash
-uv run python src/main.py data=gue data.task=prom_core_all model=evo2 seed=21194
-```
+Para instalação veja a documentação presente em `docs/evo2-ada-lovelace-setup.md` que explica detalhadamente o processo de instalação.
 
 ## Workflows BEND
 
@@ -293,14 +264,13 @@ Cada execução grava:
 | Dados de execução MLflow | `mlruns/` | Parâmetros, métricas e artefatos |
 | Sumário da run | `runs/<exp>/<model>/run_summary.json` | Sumário completo em JSON |
 
-> O caminho do leaderboard GUE é configurável via `leaderboard_csv` no
-> `config.yaml` ou via CLI: `leaderboard_csv=reports/outro.csv`. O script
-> `run_benchmarks.sh` usa `reports/benchmark_full_runs.csv`.
+> O caminho do leaderboard GUE é configurável via `leaderboard_csv` no `config.yaml` ou via CLI: `leaderboard_csv=reports/outro.csv`. O script `run_benchmarks.sh` usa `reports/benchmark_full_runs.csv`.
+
 
 ## MLflow Tags
 
 As runs do MLflow recebem automaticamente as tags `frozen_backbone` e
-`model_type`. Tags adicionais podem ser definidas via config ou CLI:
+`model_type` apropriadamente. Tags adicionais podem ser definidas via config ou CLI:
 
 ```bash
 uv run python src/main.py data=gue data.task=prom_core_all tags.minha_tag=valor
@@ -344,7 +314,7 @@ O script de preparação de variantes constrói janelas centradas REF e ALT
 diretamente do genoma de referência e ignora variantes com alelos de referência
 incompatíveis ou janelas fora dos limites.
 
-## Autorres
+## Autores
 
 - Matheus Girardi
 - Gabriel Bau
