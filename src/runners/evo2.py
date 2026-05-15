@@ -310,6 +310,16 @@ def run(cfg: DictConfig) -> None:
     for p in evo2_model.model.parameters():
         p.data = p.data.clone()
 
+    # Also clone Transformer Engine fp8_meta tensors
+    # they are marked as inference tensors and will fail during _load_best_model 
+    for m in evo2_model.model.modules():
+        if hasattr(m, "fp8_meta"):
+            for scope in m.fp8_meta.values():
+                if hasattr(scope, "values"):
+                    for v in scope.values():
+                        if isinstance(v, torch.Tensor):
+                            v.data = v.data.clone()
+
     tokenizer = evo2_model.tokenizer
     pad_token_id = int(tokenizer.pad_id)
 
