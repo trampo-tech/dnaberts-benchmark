@@ -16,8 +16,13 @@ def resolve_experiment_name(cfg) -> str:
     name = str(cfg.experiment_name)
     if name == "gue" and getattr(getattr(cfg, "data", None), "task", None):
         name = f"gue_{cfg.data.task}"
-    if getattr(getattr(cfg, "model", None), "frozen_backbone", False):
-        return f"{name}_frozen"
+    model_cfg = getattr(cfg, "model", None)
+    if model_cfg:
+        if getattr(model_cfg, "frozen_backbone", False):
+            name = f"{name}_frozen"
+        elif getattr(model_cfg, "use_lora", False):
+            name = f"{name}_lora"
+        # else: full fine-tune — no suffix
     return name
 
 
