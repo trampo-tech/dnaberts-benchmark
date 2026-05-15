@@ -229,8 +229,15 @@ def _setup_mlflow(cfg: DictConfig, run_id: str, mlflow_params: dict[str, Any]):
         "frozen_backbone": str(getattr(cfg.model, "frozen_backbone", False)).lower(),
         "model_type": str(cfg.model.type),
     }
-    extra_tags = getattr(cfg, "tags", None) or {}
-    if isinstance(extra_tags, dict):
+    extra_tags = getattr(cfg, "tags", None)
+    if extra_tags is not None and extra_tags != {}:
+        try:
+            extra_tags = OmegaConf.to_container(extra_tags, resolve=True)
+        except ValueError:
+            extra_tags = {}
+    else:
+        extra_tags = {}
+    if extra_tags:
         mlflow_tags.update({str(k): str(v) for k, v in extra_tags.items()})
     mlflow.set_tags(mlflow_tags)
     try:
