@@ -158,6 +158,17 @@ class BenchmarkTrainer(Trainer):
         )
 
 
+    def _save(self, output_dir: str | None = None, state_dict=None):
+        # EVO 2 StripedHyena Wqkv column-split creates non-contiguous parameters
+        # that safetensors cannot flatten. Override parent to always use torch.save.
+        if output_dir is None:
+            output_dir = self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        if state_dict is None:
+            state_dict = self.model.state_dict()
+        torch.save(state_dict, os.path.join(output_dir, "pytorch_model.bin"))
+
+
 def _is_main_process() -> bool:
     """Check if this is the main process (rank 0) in distributed training."""
     return not dist.is_initialized() or dist.get_rank() == 0
