@@ -49,18 +49,6 @@ for task in $TASKS; do
 done
 """ 
 
-check_cuda = 'uv run python -c "import torch; print(\"cu\" + torch.version.cuda.replace(\".\",\"\")[:3])"'
-check_torch = 'uv run python -c "import torch; print(torch.__version__[:3])"'
-
-install-flash-attn = """
-CUDA=$(uv run python -c "import torch; print('cu' + torch.version.cuda.replace('.','')[:3])")
-TORCH=$(uv run python -c "import torch; print(torch.__version__[:3])")
-PY=$(uv run python -c "import sys; print('cp' + str(sys.version_info.major) + str(sys.version_info.minor))")
-URL="https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.7.16/flash_attn-2.8.3+${CUDA}torch${TORCH}-${PY}-${PY}-linux_x86_64.whl"
-echo "Instalando: $URL"
-uv pip install "$URL"
-"""
-
 download-bend = "uv run python scripts/download_bend.py"
 download-bend-variants = "uv run python scripts/prepare_bend_variant_effects.py genome_fasta=<path>"
 
