@@ -310,8 +310,9 @@ def run(cfg: DictConfig) -> None:
     for p in evo2_model.model.parameters():
         p.data = p.data.clone()
 
-    # Also clone Transformer Engine fp8_meta tensors
-    # they are marked as inference tensors and will fail during _load_best_model
+    # Evo2.__init__ loads checkpoints inside torch.inference_mode(),
+    # which marks every tensor with the "inference tensor" flag.
+    # Cloning replaces each tensor with a clean copy that has no inference flag and all the datac
     for m in evo2_model.model.modules():
         if hasattr(m, "fp8_meta"):
             for key in ("scaling_fwd", "scaling_bwd"):
@@ -392,17 +393,13 @@ def run(cfg: DictConfig) -> None:
         evo2_model.model = get_peft_model(evo2_model.model, lora_config)
         evo2_model.model.base_model.model.config = saved_config
     else:
-        for p in evo2_model.model.parameters():
-            p.requires_grad = False
+        pass  # full fine-tuning — all params trainable
 
     model = Evo2SequenceClassifier(
         evo2_model=evo2_model,
         num_labels=num_labels,
         layer_name=cfg.model.layer_name,
-        frozen_backbone=bool(
-            getattr(cfg.model, "frozen_backbone", False)
-            or not getattr(cfg.model, "use_lora", False)
-        ),
+        frozen_backbone=getattr(cfg.model, "frozen_backbone", False),
     )
 
     label_mode = str(getattr(cfg.model, "label_mode", "class_index"))
