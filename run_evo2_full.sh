@@ -6,6 +6,7 @@ python src/main.py -m \
   data=gue \
   data.task=prom_core_all,splice_reconstructed,human_tf_0,mouse_0,emp_H3K4me1 \
   model=evo2\
+  model.use_lora=true\
   train.early_stopping_patience=0 \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \

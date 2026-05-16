@@ -30,9 +30,9 @@ tasks:
     token_max_length: 70
   splice_reconstructed:
     token_max_length: 400
-    #train_bs: 8
-    #eval_bs: 8
-    #gradient_accumulation_steps: 4
+    train_bs: 8
+    eval_bs: 8
+    gradient_accumulation_steps: 4
   human_tf_0:
     token_max_length: 101
   mouse_0:
@@ -40,6 +40,6 @@ tasks:
     gradient_accumulation_steps: 4
   emp_H3K4me1:
     token_max_length: 500
-    #train_bs: 8
-    #eval_bs: 8
-    #gradient_accumulation_steps: 4
+    train_bs: 8
+    eval_bs: 8
+    gradient_accumulation_steps: 4
