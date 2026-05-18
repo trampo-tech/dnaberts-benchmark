@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/91a4225f2c1348b981a58de007e4d6cf/artifacts
+end_time: 1779085254595
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 91a4225f2c1348b981a58de007e4d6cf
+run_name: gue_human_tf_0_frozen__bert-base-uncased__20260518T061022Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779084622368
+status: 3
+tags: []
+user_id: matheus.girardi
