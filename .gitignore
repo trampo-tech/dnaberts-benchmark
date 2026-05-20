@@ -1,9 +1,12 @@
+multirun/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 
 # C extensions
 *.so
+
+outputs/
 
 # Distribution / packaging
 .Python
@@ -50,6 +53,7 @@ coverage.xml
 # Django stuff:
 *.log
 
+
 # Sphinx documentation
 docs/_build/
 
@@ -57,11 +61,9 @@ docs/_build/
 target/
 
 # DotEnv configuration
-<<<<<<< Updated upstream
 # .env
-=======
-#.env
->>>>>>> Stashed changes
+
+runs/
 
 # Database
 *.db

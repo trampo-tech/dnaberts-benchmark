@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/e7fa43291f624991af76e398ff8d57aa/artifacts
+end_time: 1779073983847
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: e7fa43291f624991af76e398ff8d57aa
+run_name: gue_splice_reconstructed__bert-base-uncased__20260518T023846Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779071926509
+status: 3
+tags: []
+user_id: matheus.girardi

@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/00a4030bf60f4560b9a8e80546401eff/artifacts
+end_time: 1778170486330
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 00a4030bf60f4560b9a8e80546401eff
+run_name: gue_emp_H3K4me1__zhihan1996_DNABERT-2-117M__20260507T155654Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778169414851
+status: 3
+tags: []
+user_id: azureuser

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-04-28T14:35:02Z",
+  "run_id": "gue_virus_covid__zhihan1996_DNABERT-2-117M__20260428T143434Z",
+  "status": "failed",
+  "error": null,
+  "experiment": "gue_virus_covid",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 8,
+  "eval_bs": 8,
+  "learning_rate": 3e-05,
+  "max_length": 1000,
+  "git_commit": "a370f5c",
+  "runtime_seconds": 26.949787381001443,
+  "train": {},
+  "validation": {},
+  "test": {},
+  "output_dir": "runs/gue_virus_covid/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

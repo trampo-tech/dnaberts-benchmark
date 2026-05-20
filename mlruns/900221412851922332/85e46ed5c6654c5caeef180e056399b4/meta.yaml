@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/900221412851922332/85e46ed5c6654c5caeef180e056399b4/artifacts
+end_time: 1778076946209
+entry_point_name: ''
+experiment_id: '900221412851922332'
+lifecycle_stage: active
+run_id: 85e46ed5c6654c5caeef180e056399b4
+run_name: bend_variant_disease__zhihan1996_DNABERT-2-117M__20260506T130727Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778072854676
+status: 3
+tags: []
+user_id: azureuser

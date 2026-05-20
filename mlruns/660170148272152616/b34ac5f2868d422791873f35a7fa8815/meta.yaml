@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/b34ac5f2868d422791873f35a7fa8815/artifacts
+end_time: 1777395431992
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: b34ac5f2868d422791873f35a7fa8815
+run_name: gue_prom_core_all__zhihan1996_DNABERT-2-117M__20260428T165033Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777395034802
+status: 3
+tags: []
+user_id: azureuser

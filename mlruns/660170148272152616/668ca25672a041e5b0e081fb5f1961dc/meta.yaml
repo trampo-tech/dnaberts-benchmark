@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/668ca25672a041e5b0e081fb5f1961dc/artifacts
+end_time: 1777470735615
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 668ca25672a041e5b0e081fb5f1961dc
+run_name: gue_virus_covid__zhihan1996_DNABERT-2-117M__20260429T135009Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777470610382
+status: 4
+tags: []
+user_id: azureuser

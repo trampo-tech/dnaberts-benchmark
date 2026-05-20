@@ -1,0 +1,49 @@
+task: ???  # REQUIRED — e.g. splice_reconstructed, virus_covid, fungi_species_20
+
+# ── per-task registry ────────────────────────────────────────
+tasks:
+  prom_core_all:          # 70bp, binary, 59k samples
+    num_labels: 2
+    token_max_length: 20
+    train_bs: 32
+    eval_bs: 64
+    epochs: 5
+  splice_reconstructed:   # 400bp, 3-class, 45k samples
+    num_labels: 3
+    token_max_length: 80
+    train_bs: 32
+    eval_bs: 32
+    epochs: 5
+  human_tf_0:             # 101bp, binary, 34k samples
+    num_labels: 2
+    token_max_length: 30
+    train_bs: 32
+    eval_bs: 64
+    epochs: 5
+  mouse_0:                # 101bp, binary, 8k samples — small dataset
+    num_labels: 2
+    token_max_length: 30
+    train_bs: 32
+    eval_bs: 32
+    epochs: 10
+  emp_H3K4me1:            # 500bp, binary, 31k samples
+    num_labels: 2
+    token_max_length: 128
+    train_bs: 16
+    eval_bs: 32
+    gradient_accumulation_steps: 2
+    epochs: 5
+
+
+num_labels: ${data.tasks.${data.task}.num_labels}
+token_max_length: ${data.tasks.${data.task}.token_max_length}
+train_bs: ${data.tasks.${data.task}.train_bs}
+eval_bs: ${data.tasks.${data.task}.eval_bs}
+epochs: ${data.tasks.${data.task}.epochs}
+
+train_csv: data/processed/leannmlindsey_GUE_${data.task}/train.csv
+val_csv: data/processed/leannmlindsey_GUE_${data.task}/validation.csv
+test_csv: data/processed/leannmlindsey_GUE_${data.task}/test.csv
+text_col: sequence
+label_col: label
+label_offset: 0

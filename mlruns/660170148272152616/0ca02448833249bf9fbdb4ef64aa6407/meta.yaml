@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/0ca02448833249bf9fbdb4ef64aa6407/artifacts
+end_time: 1778313423631
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 0ca02448833249bf9fbdb4ef64aa6407
+run_name: gue_human_tf_0__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260509T073750Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778312271383
+status: 3
+tags: []
+user_id: matheus.girardi

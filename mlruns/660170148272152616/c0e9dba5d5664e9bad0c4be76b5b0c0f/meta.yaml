@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/c0e9dba5d5664e9bad0c4be76b5b0c0f/artifacts
+end_time: 1777913526412
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: c0e9dba5d5664e9bad0c4be76b5b0c0f
+run_name: gue_fungi_species_20__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260504T165204Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777913525216
+status: 4
+tags: []
+user_id: azureuser

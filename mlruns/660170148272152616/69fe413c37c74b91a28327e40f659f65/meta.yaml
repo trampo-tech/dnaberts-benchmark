@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/69fe413c37c74b91a28327e40f659f65/artifacts
+end_time: 1778866933919
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 69fe413c37c74b91a28327e40f659f65
+run_name: gue_splice_reconstructed_lora__evo2_1b_base__20260515T174010Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778866811347
+status: 4
+tags: []
+user_id: matheus.girardi

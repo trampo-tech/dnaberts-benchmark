@@ -1,0 +1,11 @@
+defaults:
+  - data: bend_variant_expression
+  - _self_
+
+k: 6
+input_csv: ${hydra:runtime.cwd}/${data.variant_csv}
+metric: ${data.metric}
+ref_col: ${data.ref_col}
+alt_col: ${data.alt_col}
+label_col: ${data.label_col}
+output_csv: ${hydra:runtime.cwd}/reports/kmer_variant_baseline_${data.task}.csv

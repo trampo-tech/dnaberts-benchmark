@@ -1,0 +1,4 @@
+tasks:
+  - variant_effects
+  - genomes
+output_dir: data/raw/bend

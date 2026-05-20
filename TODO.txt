@@ -1,0 +1,3 @@
+[ ] Adjust Flash-attn setup via uv to be easier to reproduce
+[ ] Run evo2 model on gue tasks
+

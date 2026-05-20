@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/660170148272152616/2441eef831b44e43b4ada84e3123f1f8/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 2441eef831b44e43b4ada84e3123f1f8
+run_name: gue_EPI_HUVEC__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260430T162836Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1777566545291
+status: 1
+tags: []
+user_id: azureuser

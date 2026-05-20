@@ -1,0 +1,9 @@
+type: transformer
+name: zhihan1996/DNABERT-2-117M
+trust_remote_code: true
+revision: null  # pin to HF commit hash for reproducibility
+max_length: 2048
+import_modules: []
+label_mode: class_index
+disable_triton: true  # Triton kernels fail to compile; fall back to PyTorch attention
+frozen_backbone: false

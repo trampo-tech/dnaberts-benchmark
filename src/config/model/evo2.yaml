@@ -1,0 +1,45 @@
+type: evo2
+name: evo2_1b_base
+trust_remote_code: false
+max_length: 8192
+import_modules: []
+label_mode: class_index
+layer_name: "blocks.18.mlp.l3"
+
+# LoRA config
+use_lora: true
+frozen_backbone: false
+lora_r: 16
+lora_alpha: 32
+lora_dropout: 0.1
+lora_target_modules: "mlp.l1,mlp.l2,mlp.l3,out_filter_dense"
+learning_rate: 1e-4
+head_learning_rate: 3e-5
+
+# EVO 2 byte-level tokenizer: ≈ 1 token / bp (vs ≈ 3-6 for k-mer).
+# Model-level defaults override gue.yaml / train.yaml.
+token_max_length: null  # resolved per-task below
+train_bs: 32
+eval_bs: 32
+gradient_accumulation_steps: 1
+
+# Per-task overrides take priority over model-level defaults above.
+# Any key handled by _resolve() in evo2.py can appear here.
+tasks:
+  prom_core_all:
+    token_max_length: 70
+  splice_reconstructed:
+    token_max_length: 400
+    train_bs: 8
+    eval_bs: 8
+    gradient_accumulation_steps: 4
+  human_tf_0:
+    token_max_length: 101
+  mouse_0:
+    token_max_length: 101
+    gradient_accumulation_steps: 4
+  emp_H3K4me1:
+    token_max_length: 500
+    train_bs: 8
+    eval_bs: 8
+    gradient_accumulation_steps: 4

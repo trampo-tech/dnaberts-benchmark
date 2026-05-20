@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/32d82cc7ded74ee99fb1631ab0ef832c/artifacts
+end_time: 1778637258279
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 32d82cc7ded74ee99fb1631ab0ef832c
+run_name: gue_prom_core_all__evo2_1b_base__20260513T012703Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1778635624859
+status: 4
+tags: []
+user_id: blau

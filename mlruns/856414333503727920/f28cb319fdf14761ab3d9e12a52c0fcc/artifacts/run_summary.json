@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-05-06T11:56:36Z",
+  "run_id": "bend_variant_expression__zhihan1996_DNABERT-2-117M__20260506T113120Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "bend_variant_expression",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": null,
+  "train_bs": null,
+  "eval_bs": 64,
+  "learning_rate": null,
+  "metric": "spearman",
+  "max_length": 128,
+  "git_commit": "17c982a",
+  "runtime_seconds": 1489.8863034350002,
+  "n_variants": 105263,
+  "mean_cosine_distance": 0.5767451038233802,
+  "train": {},
+  "validation": {},
+  "test": {
+    "spearman_r": -0.011387141394687494
+  },
+  "output_dir": "runs/bend_variant_expression/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-04-23T12:04:05Z",
+  "run_id": "gue_prom_core_all__zhihan1996_DNABERT-2-117M__20260423T120136Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "gue_prom_core_all",
+  "model_name": "zhihan1996/DNABERT-2-117M",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 8,
+  "eval_bs": 8,
+  "learning_rate": 8e-05,
+  "max_length": 512,
+  "git_commit": "cc70a4d",
+  "runtime_seconds": 148.10827023399997,
+  "train": {
+    "train_runtime": 125.1576,
+    "train_samples_per_second": 1021.592,
+    "train_steps_per_second": 127.711,
+    "total_flos": 104488185904512.0,
+    "train_loss": 0.6983383178710938,
+    "epoch": 0.18768768768768768
+  },
+  "validation": {
+    "validation_loss": 0.69500732421875,
+    "validation_accuracy": 0.5054898648648649,
+    "validation_f1": 0.6715287517531556,
+    "validation_precision": 0.5054898648648649,
+    "validation_recall": 1.0,
+    "validation_roc_auc": 0.5010344677520732,
+    "validation_runtime": 9.4885,
+    "validation_samples_per_second": 499.128,
+    "validation_steps_per_second": 62.391,
+    "epoch": 0.18768768768768768
+  },
+  "test": {
+    "test_loss": 0.695605456829071,
+    "test_accuracy": 0.5013513513513513,
+    "test_f1": 0.6678667866786678,
+    "test_precision": 0.5013513513513513,
+    "test_recall": 1.0,
+    "test_roc_auc": 0.500605658642503,
+    "test_runtime": 12.2473,
+    "test_samples_per_second": 483.373,
+    "test_steps_per_second": 60.422,
+    "epoch": 0.18768768768768768
+  },
+  "output_dir": "runs/gue_prom_core_all/zhihan1996_DNABERT-2-117M",
+  "device": "Tesla T4"
+}

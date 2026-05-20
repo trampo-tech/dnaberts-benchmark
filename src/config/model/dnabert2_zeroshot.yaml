@@ -1,0 +1,6 @@
+type: variant_effect_zeroshot
+name: zhihan1996/DNABERT-2-117M
+trust_remote_code: true
+revision: null
+disable_triton: true
+max_length: 128

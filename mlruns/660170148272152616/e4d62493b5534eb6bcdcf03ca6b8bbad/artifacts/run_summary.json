@@ -1,0 +1,52 @@
+{
+  "timestamp": "2026-04-24T15:14:23Z",
+  "run_id": "gue_human_tf_0__InstaDeepAI_nucleotide-transformer-v2-500m-multi-species__20260424T145249Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "gue_human_tf_0",
+  "model_name": "InstaDeepAI/nucleotide-transformer-v2-500m-multi-species",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": 3,
+  "train_bs": 32,
+  "eval_bs": 64,
+  "learning_rate": 3e-05,
+  "max_length": 128,
+  "git_commit": "8e23558",
+  "runtime_seconds": 1292.90076984,
+  "train": {
+    "train_runtime": 1281.5155,
+    "train_samples_per_second": 68.216,
+    "train_steps_per_second": 2.133,
+    "total_flos": 5629296496942800.0,
+    "train_loss": 0.3157991222352978,
+    "epoch": 3.0
+  },
+  "validation": {
+    "validation_loss": 0.42153245210647583,
+    "validation_accuracy": 0.8082149474984558,
+    "validation_f1": 0.8186861313868613,
+    "validation_precision": 0.780189204229271,
+    "validation_recall": 0.8611793611793612,
+    "validation_roc_auc": 0.8932455323759672,
+    "validation_runtime": 5.471,
+    "validation_samples_per_second": 591.848,
+    "validation_steps_per_second": 9.322,
+    "epoch": 3.0
+  },
+  "test": {
+    "test_loss": 0.37820273637771606,
+    "test_accuracy": 0.831,
+    "test_f1": 0.8495102404274265,
+    "test_precision": 0.7656500802568218,
+    "test_recall": 0.954,
+    "test_roc_auc": 0.92188,
+    "test_runtime": 1.6931,
+    "test_samples_per_second": 590.616,
+    "test_steps_per_second": 9.45,
+    "epoch": 3.0
+  },
+  "output_dir": "runs/gue_human_tf_0/InstaDeepAI_nucleotide-transformer-v2-500m-multi-species",
+  "device": "Tesla T4"
+}
