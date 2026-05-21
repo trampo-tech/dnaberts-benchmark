@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/3fb6291676574efeae93b135b4ceb623/artifacts
+end_time: 1779325206534
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 3fb6291676574efeae93b135b4ceb623
+run_name: gue_emp_H3K4me1_frozen__bert-base-uncased__20260521T005507Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779324907803
+status: 3
+tags: []
+user_id: matheus.girardi

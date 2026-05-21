@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/b8c348ae395d424a9a3dba3bf945a11c/artifacts
+end_time: 1779341774164
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: b8c348ae395d424a9a3dba3bf945a11c
+run_name: gue_human_tf_0_lora__evo2_1b_base__20260521T051236Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779340356245
+status: 3
+tags: []
+user_id: matheus.girardi
