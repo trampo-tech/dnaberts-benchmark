@@ -23,6 +23,7 @@ RUNNERS = {
     "evo2": "runners.evo2",
     "kmer_logreg": "runners.kmer_logreg",
     "variant_effect_zeroshot": "runners.variant_effect_zeroshot",
+    "variant_effect_zeroshot_evo2": "runners.variant_effect_zeroshot_evo2",
 }
 
 

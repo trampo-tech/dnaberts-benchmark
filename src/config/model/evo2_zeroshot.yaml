@@ -1,0 +1,6 @@
+type: variant_effect_zeroshot_evo2
+name: evo2_1b_base
+trust_remote_code: false
+max_length: 8192
+layer_name: "blocks.18.mlp.l3"
+token_max_length: 512
