@@ -33,7 +33,7 @@ echo ""
 echo "Running BEND variant effects tasks (zero-shot)..."
 uv run python src/main.py -m \
   data=bend_variant_expression,bend_variant_disease \
-  model=dnabert2_zeroshot,nt_zeroshot,evo2_zeroshot \
+  model=dnabert2_zeroshot,nt_zeroshot\
   tags=full_runs \
   leaderboard_csv=reports/benchmark_full_runs.csv
 
