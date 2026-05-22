@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/521e2b989cfd4c05bd52fb6ec245887d/artifacts
+end_time: 1779322794151
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 521e2b989cfd4c05bd52fb6ec245887d
+run_name: gue_splice_reconstructed_frozen__zhihan1996_DNABERT-2-117M__20260521T001250Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779322371132
+status: 3
+tags: []
+user_id: matheus.girardi

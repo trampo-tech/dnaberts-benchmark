@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/660170148272152616/263d4a8ebcc749ffae1f9b4264e59083/artifacts
+end_time: 1779369366276
+entry_point_name: ''
+experiment_id: '660170148272152616'
+lifecycle_stage: active
+run_id: 263d4a8ebcc749ffae1f9b4264e59083
+run_name: gue_emp_H3K4me1__evo2_1b_base__20260521T114953Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779364193931
+status: 3
+tags: []
+user_id: matheus.girardi
