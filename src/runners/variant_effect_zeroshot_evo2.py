@@ -122,7 +122,7 @@ def _tokenize_batch_evo2(
         all_masks.append(mask)
 
     return {
-        "input_ids": torch.tensor(all_ids),
+        "input_ids": torch.tensor(all_ids, dtype=torch.long),
         "attention_mask": torch.tensor(all_masks),
     }
 
