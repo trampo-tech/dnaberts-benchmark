@@ -315,7 +315,7 @@ def run(cfg: DictConfig) -> None:
             ref_embeddings = batch_embeddings[:split_idx].reshape(split_idx, -1)
             alt_embeddings = batch_embeddings[split_idx:].reshape(len(alt_sequences), -1)
             batch_distances = 1.0 - F.cosine_similarity(alt_embeddings, ref_embeddings, dim=-1)
-            distances.extend(batch_distances.numpy().astype(float).tolist())
+            distances.extend(batch_distances.float().numpy().astype(float).tolist())
 
         scores = np.asarray(distances, dtype=np.float32)
         labels = variant_df[label_col].to_numpy()
