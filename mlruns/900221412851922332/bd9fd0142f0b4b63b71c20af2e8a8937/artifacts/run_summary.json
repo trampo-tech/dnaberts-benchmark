@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-05-23T00:58:20Z",
+  "run_id": "bend_variant_disease__evo2_1b_base__20260522T224250Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "bend_variant_disease",
+  "model_name": "evo2_1b_base",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 42,
+  "epochs": null,
+  "train_bs": null,
+  "eval_bs": 64,
+  "learning_rate": null,
+  "metric": "auroc",
+  "max_length": 512,
+  "git_commit": "c7dd8da",
+  "runtime_seconds": 8123.703231293999,
+  "n_variants": 295495,
+  "mean_cosine_distance": 0.022339765689774783,
+  "train": {},
+  "validation": {},
+  "test": {
+    "auroc": 0.948113583369607
+  },
+  "output_dir": "runs/bend_variant_disease/evo2_1b_base",
+  "device": "NVIDIA GeForce RTX 4090"
+}

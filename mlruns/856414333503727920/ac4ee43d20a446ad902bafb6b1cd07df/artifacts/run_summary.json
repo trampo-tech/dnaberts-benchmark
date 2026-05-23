@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-05-23T14:33:00Z",
+  "run_id": "bend_variant_expression__evo2_1b_base__20260523T134349Z",
+  "status": "completed",
+  "error": null,
+  "experiment": "bend_variant_expression",
+  "model_name": "evo2_1b_base",
+  "model_fallback": false,
+  "model_fallback_reason": null,
+  "seed": 63194,
+  "epochs": null,
+  "train_bs": null,
+  "eval_bs": 64,
+  "learning_rate": null,
+  "metric": "auroc",
+  "max_length": 512,
+  "git_commit": "c7dd8da",
+  "runtime_seconds": 2945.082367897994,
+  "n_variants": 105263,
+  "mean_cosine_distance": 0.015911262148143222,
+  "train": {},
+  "validation": {},
+  "test": {
+    "auroc": 0.5419684276412295
+  },
+  "output_dir": "runs/bend_variant_expression/evo2_1b_base",
+  "device": "NVIDIA GeForce RTX 4090"
+}
