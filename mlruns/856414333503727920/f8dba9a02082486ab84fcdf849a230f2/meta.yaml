@@ -1,0 +1,14 @@
+artifact_uri: file:///home/azureuser/localfiles/personal/dnaberts-benchmark/mlruns/856414333503727920/f8dba9a02082486ab84fcdf849a230f2/artifacts
+end_time: 1779482882793
+entry_point_name: ''
+experiment_id: '856414333503727920'
+lifecycle_stage: active
+run_id: f8dba9a02082486ab84fcdf849a230f2
+run_name: bend_variant_expression__evo2_1b_base__20260522T204752Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779482880029
+status: 3
+tags: []
+user_id: matheus.girardi

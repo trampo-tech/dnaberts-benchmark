@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/856414333503727920/788ac999915a40398218f51ebd709643/artifacts
+end_time: 1779543783731
+entry_point_name: ''
+experiment_id: '856414333503727920'
+lifecycle_stage: active
+run_id: 788ac999915a40398218f51ebd709643
+run_name: bend_variant_expression__evo2_1b_base__20260523T134236Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779543761935
+status: 4
+tags: []
+user_id: matheus.girardi

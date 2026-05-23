@@ -72,6 +72,12 @@ TOKEN_MAX_LENGTH_PRIORITY: list[str] = [
     "model.max_length",
 ]
 
+EVO2_VARIANT_ZEROSHOT_PRIORITY: list[str] = [
+    "model.{key}",
+    "data.{key}",
+    "train.{key}",
+]
+
 EVO2_TOKEN_MAX_LENGTH_PRIORITY: list[str] = [
     "model.tasks.{task}.token_max_length",
     "model.token_max_length",
@@ -203,6 +209,21 @@ def make_variant_zeroshot_resolver(cfg: DictConfig) -> ParamResolver:
         priority=VARIANT_ZEROSHOT_PRIORITY,
         param_overrides={
             "token_max_length": [
+                "data.token_max_length",
+                "data.max_length",
+                "model.max_length",
+            ],
+        },
+    )
+
+
+def make_evo2_variant_zeroshot_resolver(cfg: DictConfig) -> ParamResolver:
+    return ParamResolver(
+        cfg,
+        priority=EVO2_VARIANT_ZEROSHOT_PRIORITY,
+        param_overrides={
+            "token_max_length": [
+                "model.token_max_length",
                 "data.token_max_length",
                 "data.max_length",
                 "model.max_length",

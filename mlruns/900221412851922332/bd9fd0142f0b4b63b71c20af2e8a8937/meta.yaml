@@ -1,0 +1,14 @@
+artifact_uri: file:./mlruns/900221412851922332/bd9fd0142f0b4b63b71c20af2e8a8937/artifacts
+end_time: 1779497900559
+entry_point_name: ''
+experiment_id: '900221412851922332'
+lifecycle_stage: active
+run_id: bd9fd0142f0b4b63b71c20af2e8a8937
+run_name: bend_variant_disease__evo2_1b_base__20260522T224250Z
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1779489776834
+status: 3
+tags: []
+user_id: matheus.girardi

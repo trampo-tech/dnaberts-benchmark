@@ -36,4 +36,11 @@ python src/main.py -m \
   save_predictions=true \
   tags=full_runs \
   seed=63194,21194
+
+echo "Running evo2 1B on BEND tasks"
+python src/main.py -m \
+  data=bend_variant_expression,bend_variant_disease \
+  model=evo2_zeroshot \
+  tags=full_runs \
+  leaderboard_csv=reports/benchmark_full_runs.csv
   
