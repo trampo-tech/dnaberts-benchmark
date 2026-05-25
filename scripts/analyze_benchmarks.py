@@ -95,7 +95,6 @@ training_order = ["No FT", "Full FT", "LoRA"]
 
 tasks = sorted(grouped_gue["task"].unique())
 
-# Nomes limpos para o eixo X
 _label_overrides = {
     "gue_emp_h3k4me1":          "EMP\nH3K4me1",
     "gue_human_tf_0":           "Human TF",
@@ -109,8 +108,7 @@ task_label_map = {
 }
 
 # =====================================================
-# CONSTRUIR GRÁFICO MANUALMENTE
-# =====================================================
+# CONSTRUIR GRÁFICO 
 
 n_tasks  = len(tasks)
 models   = model_order
@@ -134,7 +132,6 @@ for m_idx, model in enumerate(models):
         if subset.empty:
             continue
 
-        # Melhor MCC entre os training types disponíveis
         row = subset.sort_values("test_mcc", ascending=False).iloc[0]
 
         x     = x_positions[t_idx] + m_idx * bar_width
