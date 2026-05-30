@@ -10,7 +10,7 @@ uv run python src/main.py -m \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
   tags=full_runs \
-  seed=63194,21194
+  seed=63194,21194,1480734
 
 echo ""
 
@@ -24,7 +24,7 @@ uv run python src/main.py -m \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
   tags=full_runs \
-  seed=63194,21194
+  seed=63194,21194,1480734
 
 echo ""
 

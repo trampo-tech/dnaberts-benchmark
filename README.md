@@ -90,6 +90,12 @@ uv run python src/main.py data=gue data.task=splice_reconstructed
 uv run task mlflow-ui
 ```
 
+Alternativa leve (apenas o MLflow, sem instalar dependências do projeto):
+
+```bash
+uv run --with mlflow --no-project mlflow ui --backend-store-uri file:./mlruns --host 127.0.0.1 --port 5000
+```
+
 ## Suite Completa
 
 O script `run_benchmarks.sh` executa a suite completa de benchmarks:
@@ -189,6 +195,19 @@ treinada (sem LoRA).
 - **Transformer Engine** - Para o modelo 1B (40B e 20B também) é necessário ter uma GPU com suporte para fp8 via Transformer Engine.
 
 Para instalação veja a documentação presente em `docs/evo2-ada-lovelace-setup.md` que explica detalhadamente o processo de instalação.
+
+### Suite EVO 2
+
+O script `run_evo2_full.sh` executa a suite completa do EVO 2:
+
+- **GUE com LoRA**: 5 tarefas — LoRA aplicado às camadas MLP
+- **GUE com backbone congelado**: mesmas tarefas, apenas cabeça treinável
+- **GUE com fine-tuning completo**: todas as camadas treináveis (sem LoRA)
+- **BEND zero-shot**: 2 tarefas de variant-effect
+
+```bash
+bash run_evo2_full.sh
+```
 
 ## Workflows BEND
 

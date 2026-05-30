@@ -1,4 +1,0 @@
-type: kmer_logreg
-name: baseline_kmer4_logreg
-kmer: 4
-max_iter: 1000
