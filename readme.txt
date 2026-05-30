@@ -4,9 +4,8 @@
 ================================================================================
 
 Autores: Matheus Girardi, Gabriel Bau, Andrei Silva, Artur Pandolfo, Evandro Diniz
-Licença: MIT
 
-Este projeto avalia modelos de linguagem para DNA nos benchmarks GUE
+Este projeto avalia modelos de linguagem para DNA em um subset de tarefas dos benchmarks GUE
 (Genome Understanding Evaluation) e BEND (zero-shot variant-effect prediction),
 com suporte a 6 configurações de modelo: DNABERT-2, Nucleotide Transformer v2,
 EVO 2, K-mer + Regressão Logística, BERT-base-uncased e variantes zero-shot.
@@ -14,31 +13,26 @@ EVO 2, K-mer + Regressão Logística, BERT-base-uncased e variantes zero-shot.
 
 1. CÓDIGO-FONTE (src/)
 --------------------------------------------------------------------------------
-Arquitetura Hydra-based com runners especializados por tipo de modelo.
+A arquitetura com é centralizada para Hydra com runners por tipo de modelo.
 
   src/main.py
-    Ponto de entrada. Mapeia model.type para o runner correspondente,
-    define seeds e inicia a execução.
+    Ponto de entrada.
 
   src/runners/transformer.py
     Treino supervisionado GUE via HuggingFace Trainer para DNABERT-2,
-    Nucleotide Transformer e BERT-base-uncased. Suporta LoRA e backbone
-    congelado. Custom BenchmarkTrainer com otimizador dual-LR.
+    Nucleotide Transformer e BERT-base-uncased. Suporta LoRA, backbone
+    congelado e fine-tuning completo.
 
   src/runners/evo2.py
     Treino supervisionado GUE para EVO 2. Tokenizador char-level,
-    extração de embeddings via forward hooks, suporte bf16 e FP8.
-
-  src/runners/kmer_logreg.py
-    Baseline GUE com regressão logística (sklearn) sobre frequência de
-    k-mers (k=4 padrão).
+    extração de embeddings via forward hooks, suporte para FP8.
 
   src/runners/variant_effect_zeroshot.py
-    Zero-shot BEND: extrai embeddings REF/ALT de backbones HF e calcula
+    Zero-shot BEND: extrai embeddings REF/ALT de backbones HuggingFace e calcula
     distância cosseno para predição de efeito de variantes.
 
   src/runners/variant_effect_zeroshot_evo2.py
-    Mesmo protocolo acima adaptado para EVO 2 (APIs nativas).
+    Mesmo protocolo acima adaptado para EVO 2.
 
   src/services/benchmark_logger.py
     Utilitários de logging: geração de timestamps e run_ids, salvamento
@@ -53,38 +47,36 @@ Arquitetura Hydra-based com runners especializados por tipo de modelo.
     e aplicação de LoRA via PEFT.
 
   src/modeling/compat.py
-    Correções de compatibilidade: bloqueio de Triton legado, desabilitação
+    Alguma correções de compatibilidade: bloqueio de Triton legado, desabilitação
     de Flash Attention remoto, ajuste de pad_token_id e hidden_size.
 
 
 2. CONFIGURAÇÕES (src/config/)
 --------------------------------------------------------------------------------
 Configurações Hydra organizadas por domínio, com resolução de parâmetros
-por cadeia de prioridade (src/config/resolver.py).
+por prioridade definida em (src/config/resolver.py).
 
   src/config/config.yaml
     Configuração raiz. Define modelo, dados, treino e parâmetros globais
     (experiment_name, leaderboard_csv, seed=42, tags).
 
-  src/config/model/                 (9 arquivos YAML)
-    dnabert2.yaml                   DNABERT-2-117M, max_length=2048
-    nucleotide_transformer.yaml     NT v2 500M, max_length=2048, LoRA r=8
-    evo2.yaml                       EVO 2 1B, max_length=8192, LoRA r=16
-    kmer_logreg.yaml                Baseline k=4, max_iter=1000
-    bertbase.yaml                   BERT-base-uncased, max_length=512
-    dnabert2_zeroshot.yaml          DNABERT-2 zero-shot, max_length=128
-    nt_zeroshot.yaml                NT zero-shot, max_length=128
-    evo2_zeroshot.yaml              EVO 2 zero-shot, max_length=8192
+  src/config/model/
+    dnabert2.yaml                   DNABERT-2-117M
+    nucleotide_transformer.yaml     NT v2 500M
+    evo2.yaml                       EVO 2 1B
+    bertbase.yaml                   BERT-base-uncased
+    dnabert2_zeroshot.yaml          DNABERT-2 zero-shot
+    nt_zeroshot.yaml                NT zero-shot
+    evo2_zeroshot.yaml              EVO 2 zero-shot
 
-  src/config/data/                  (3 arquivos YAML)
+  src/config/data/
     gue.yaml                        5 tarefas GUE com parâmetros por tarefa
     bend_variant_expression.yaml    Dados BEND - expressão
     bend_variant_disease.yaml       Dados BEND - doença
 
-  src/config/train/                 (2 arquivos YAML)
-    default.yaml                    Treino GUE: lr=3e-5, early_stopping=7,
-                                    fp16, métrica alvo=f1, MLflow ativo
-    bend_default.yaml               Treino BEND: métrica alvo=auroc_macro
+  src/config/train/
+    default.yaml                    Defaults que são sobrescritos por tarefa GUE
+    bend_default.yaml               Treino BEND
 
 
 3. SCRIPTS DE BENCHMARK
@@ -92,13 +84,13 @@ por cadeia de prioridade (src/config/resolver.py).
 Scripts shell que executam as suítes completas de avaliação.
 
   run_benchmarks.sh
-    Suite completa: 5 tarefas GUE x 3 modelos x 2 seeds + BEND zero-shot
-    x 2 tarefas x 2 modelos. Gera reports/benchmark_full_runs.csv (144
-    execuções). Utiliza uv run + Hydra multirun (-m).
+    Suite completa: 5 tarefas GUE x 3 modelos x 3 seeds + BEND zero-shot
+    x 2 tarefas x 2 modelos. Escreve resultados em reports/benchmark_full_runs.csv.
+    Utiliza uv run + Hydra multirun (-m).
 
   run_evo2_full.sh
     Suite EVO 2: treino GUE com LoRA, backbone congelado e fine-tuning
-    completo, mais BEND zero-shot. Utiliza python diretamente.
+    completo, mais BEND zero-shot. Utiliza python diretamente devido ao environment diferente para o Evo2.
 
 
 4. SCRIPTS DE DADOS (scripts/)
@@ -121,10 +113,6 @@ pyproject.toml e executadas via uv run task <nome>.
     e genoma de referência FASTA.
     Chama: scripts/prepare_bend_variant_effects.py
 
-  uv run task kmer-variant-baseline
-    Baseline BEND usando distância L1 entre frequências de k-mers.
-    Chama: scripts/kmer_variant_baseline.py
-
   scripts/create_dataset.py
     Cria datasets brutos a partir de arquivos FASTA (promotores,
     negativos genômicos, TATA binário).
@@ -140,45 +128,60 @@ pyproject.toml e executadas via uv run task <nome>.
   scripts/verify_evo2_fp8.py
     Verifica suporte a FP8 via Transformer Engine no EVO 2.
 
+  scripts/graphs.py
+    Gera figuras comparativas (PNG) a partir dos CSVs de resultados.
+    Produz 9 gráficos organizados em 5 visões: macro (acurácia vs.
+    tempo), estratégia de fine-tuning por modelo, detalhamento EVO 2,
+    heatmap GUE por tarefa x modelo, e resultados BEND.
+    Saída: reports/figures/visao*.png
+
 
 5. RESULTADOS (reports/)
 --------------------------------------------------------------------------------
 Arquivos com métricas e predições de todas as execuções.
 
   reports/benchmark_results.csv
-    Leaderboard GUE: 109 execuções com métricas por tarefa/modelo/seed.
-    Colunas: F1, MCC, acurácia, ROC-AUC (validação e teste), runtime,
-    dispositivo, git_commit.
+    Leaderboard GUE de execuções gerais.
 
   reports/benchmark_results_bend.csv
-    Leaderboard BEND: 6 execuções zero-shot com AUROC, número de
-    variantes e distância cosseno média.
+    Leaderboard BEND de execuções gerais.
 
   reports/benchmark_full_runs.csv
-    Resultado da suite completa (144 execuções), mesmo formato do
+    Resultado da suite completa, mesmo formato do
     benchmark_results.csv, gerado por run_benchmarks.sh.
 
   reports/predictions/
-    141 arquivos CSV com probabilidades por amostra. Nomenclatura:
-    {experimento}__{modelo}__{timestamp}.csv. Colunas: run_id,
-    true_label, predicted_label, prob_class_0..prob_class_N.
+    Predições de todas as execuções do run_benchmarks.sh,
+    um arquivo CSV por execução.
+
+  reports/gue_summary.csv
+    Sumário agregado das execuções GUE com médias por tarefa, modelo base e tipo de treinamento.
+
+  reports/figures/
+    9 figuras PNG (300 DPI) geradas por scripts/graphs.py:
+      visao1_macro_f1.png / visao1_macro_mcc.png
+        Dispersão: métrica média vs. tempo de treino por modelo/tipo.
+      visao2_estrategia_f1.png / visao2_estrategia_mcc.png
+        Barras comparando Sem FT vs. Com FT por modelo.
+      visao3_micro_evo2_f1.png / visao3_micro_evo2_mcc.png
+        EVO 2 detalhado por tarefa: Sem FT vs. Full FT vs. LoRA.
+      visao4_geral_heatmap_f1.png / visao4_geral_heatmap_mcc.png
+        Heatmap: melhor métrica por modelo × tarefa GUE.
+      visao5_bend.png
+        AUROC zero-shot por modelo nas tarefas BEND.
 
 
 6. RASTREAMENTO (mlruns/)
 --------------------------------------------------------------------------------
-Arquivos de rastreamento do MLflow (~93k artefatos), com métricas por
+Arquivos de rastreamento do MLflow, com métricas por
 passo de treino, parâmetros dos modelos e sumários JSON de cada execução.
-Distribuídos em 4 experimentos distintos (GUE, HF Trainer, BEND, Default).
 
-Para visualizar a interface:
-    uv run task mlflow-ui
-    # Abre em http://127.0.0.1:5000
 
 
 7. DOCUMENTAÇÃO
 --------------------------------------------------------------------------------
   README.md
-    Documento principal do projeto. Explica como utilizar os códigos:
+    Documento principal do projeto para uso do mesmo. Explica como utilizar os códigos:
     instalação de dependências com uv, estrutura de diretórios,
     comandos para execução de benchmarks, uso do Hydra para
     configuração e varredura de hiperparâmetros, e interpretação

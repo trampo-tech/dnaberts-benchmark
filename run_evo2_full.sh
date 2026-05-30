@@ -11,7 +11,7 @@ python src/main.py -m \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
   tags=full_runs \
-  seed=63194,21194
+  seed=63194,21194,1480734
 
 echo "Running evo2 1B as a frozen backbone"
 python src/main.py -m \
@@ -23,7 +23,7 @@ python src/main.py -m \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
   tags=full_runs \
-  seed=63194,21194
+  seed=63194,21194,1480734
 
 echo "Running evo2 1B with full fine-tuning"
 python src/main.py -m \
@@ -35,7 +35,7 @@ python src/main.py -m \
   leaderboard_csv=reports/benchmark_full_runs.csv \
   save_predictions=true \
   tags=full_runs \
-  seed=63194,21194
+  seed=63194,21194,1480734
 
 echo "Running evo2 1B on BEND tasks"
 python src/main.py -m \
@@ -43,4 +43,3 @@ python src/main.py -m \
   model=evo2_zeroshot \
   tags=full_runs \
   leaderboard_csv=reports/benchmark_full_runs.csv
-  
